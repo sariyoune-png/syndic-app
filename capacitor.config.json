@@ -1,0 +1,9 @@
+{
+  "appId": "com.syndic.app",
+  "appName": "Syndic",
+  "webDir": "www",
+  "server": {
+    "url": "https://frabjous-semolina-21dae2.netlify.app",
+    "cleartext": true
+  }
+}
