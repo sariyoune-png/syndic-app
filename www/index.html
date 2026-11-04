@@ -1,13 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syndic</title>
-    <meta http-equiv="refresh" content="0; url=https://frabjous-semolina-21dae2.netlify.app/">
+    <title>Syndic - Gestion de copropriété</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #f5f7fa; margin: 0; }
+        header { background: #2E7D32; color: white; padding: 16px; }
+        .card { background: white; margin: 16px; padding: 16px; border-radius: 12px; }
+        .value { font-size: 1.4rem; font-weight: bold; color: #2E7D32; }
+    </style>
 </head>
 <body>
-    <p>Redirection vers l'application...</p>
-    <script>window.location.href = 'https://frabjous-semolina-21dae2.netlify.app/';</script>
+    <header><h1>Syndic - Application autonome</h1></header>
+    <div class="card">
+        <div>Solde trésorerie</div>
+        <div class="value">140.64 MAD</div>
+    </div>
+    <div class="card">
+        <div>Impayés</div>
+        <div class="value" style="color:#d32f2f;">-400.00 MAD</div>
+    </div>
+    <div class="card">
+        <p>Application embarquée dans l'APK.</p>
+        <p>Connecte-toi à Supabase pour les données en temps réel.</p>
+    </div>
+    <script>
+        // Connexion Supabase possible ici
+        console.log('Application autonome chargée');
+    </script>
 </body>
 </html>
