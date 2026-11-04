@@ -71,6 +71,72 @@
         <div class="loading">Chargement...</div>
     </main>
 
+    <script></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fa; color: #333; }
+        header { background: #2E7D32; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+        header h1 { font-size: 1.4rem; flex: 1; }
+        .apk-btn { background: white; color: #2E7D32; padding: 8px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+        .apk-btn:hover { background: #e8f5e9; }
+        nav { display: flex; gap: 6px; padding: 12px 16px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
+        nav button { padding: 6px 12px; border: none; background: #e8f5e9; border-radius: 16px; cursor: pointer; font-weight: 500; white-space: nowrap; font-size: 0.85rem; }
+        nav button.active { background: #2E7D32; color: white; }
+        main { padding: 20px; max-width: 960px; margin: 0 auto; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .card .label { font-size: 0.85rem; color: #666; }
+        .card .value { font-size: 1.4rem; font-weight: 700; color: #2E7D32; margin-top: 4px; }
+        .section { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .section h2 { font-size: 1.1rem; margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eee; }
+        th { font-size: 0.85rem; color: #666; }
+        .status-paid { color: #2E7D32; font-weight: 600; }
+        .status-partial { color: #f57c00; font-weight: 600; }
+        .status-unpaid { color: #d32f2f; font-weight: 600; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+        .badge-paid { background: #e8f5e9; color: #2E7D32; }
+        .badge-partial { background: #fff3e0; color: #f57c00; }
+        .badge-unpaid { background: #ffebee; color: #d32f2f; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .error { background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #2E7D32; color: white; }
+        .btn-secondary { background: #e0e0e0; }
+        .month-scroll { max-height: 160px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .month-item { padding: 10px 14px; cursor: pointer; }
+        .month-item:hover, .month-item.selected { background: #e8f5e9; }
+        .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: end; }
+        .filters .form-group { margin: 0; min-width: 140px; }
+    </style>
+</head>
+<body>
+    <header>
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="8" fill="white"/>
+            <path d="M8 28V16L20 8L32 16V28H24V20H16V28H8Z" fill="#2E7D32"/>
+        </svg>
+        <h1>Syndic - Gestion de copropriété</h1>
+        <a class="apk-btn" id="apkDownload" href="https://github.com/sariyoune-png/syndic-app/releases/download/v1.0.0/Syndic-release.apk" download>Télécharger l'APK</a>
+    </header>
+    <nav>
+        <button class="active" data-section="dashboard">Accueil</button>
+        <button data-section="apartments">Appartements</button>
+        <button data-section="cotisations">Cotisations</button>
+        <button data-section="expenses">Dépenses</button>
+        <button data-section="treasury">Trésorerie</button>
+        <button data-section="add">Ajouter</button>
+    </nav>
+    <main id="content">
+        <div class="loading">Chargement...</div>
+    </main>
+
     <script>
         const SUPABASE_URL = 'https://nactxqbnqcdbklddmraa.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_vuD8aWG-MEhraGtGPFp2tg_YrSiL1NX';
@@ -126,7 +192,7 @@
             const totalDepenses = 3271.36;
             const solde = 140.64;
 
-            document.getElementById('content').innerHTML = 
+            document.getElementById('content').innerHTML = `
                 <div class="cards">
                     <div class="card"><div class="label">Solde trésorerie</div><div class="value" style="color:#2E7D32;">${solde.toFixed(2)} MAD</div></div>
                     <div class="card"><div class="label">Impayés</div><div class="value" style="color:#d32f2f;">-${outstanding.toFixed(2)} MAD</div></div>
@@ -143,7 +209,7 @@
                     <p>Dépenses en attente : <strong>${pendingExpenses.toFixed(2)} MAD</strong></p>
                     <p>Nombre d'appartements : <strong>${dash?.unit_count || 4}</strong></p>
                 </div>
-            ;
+            `;
         }
 
         async function loadApartments() {
@@ -156,14 +222,14 @@
                 if (remaining <= 0) { status = 'Payé'; cls = 'status-paid'; badge = 'badge-paid'; }
                 else if (paid > 0) { status = 'Partiel'; cls = 'status-partial'; badge = 'badge-partial'; }
                 else { status = 'Impayé'; cls = 'status-unpaid'; badge = 'badge-unpaid'; }
-                return <tr>
+                return `<tr>
                     <td><strong>${u.unit_number}</strong></td>
                     <td>${paid} MAD</td>
                     <td>${remaining} MAD</td>
                     <td><span class="badge ${badge}">${status}</span></td>
-                </tr>;
+                </tr>`;
             }).join('');
-            document.getElementById('content').innerHTML = 
+            document.getElementById('content').innerHTML = `
                 <div class="section">
                     <h2>Appartements</h2>
                     <table>
@@ -171,16 +237,16 @@
                         <tbody>${rows}</tbody>
                     </table>
                 </div>
-            ;
+            `;
         }
 
         async function loadCotisations() {
             const { data: units } = await sb.from('units').select('id, unit_number').order('unit_number');
             const monthItems = months.map((m, i) => 
-                <div class="month-item ${i+1 === selectedMonth ? 'selected' : ''}" data-month="${i+1}">${m}</div>
+                `<div class="month-item ${i+1 === selectedMonth ? 'selected' : ''}" data-month="${i+1}">${m}</div>`
             ).join('');
 
-            document.getElementById('content').innerHTML = 
+            document.getElementById('content').innerHTML = `
                 <div class="section">
                     <h2>Cotisations</h2>
                     <div class="filters">
@@ -198,7 +264,7 @@
                     </div>
                     <div id="cotList"><div class="loading">Chargement...</div></div>
                 </div>
-            ;
+            `;
 
             document.querySelectorAll('#cotMonthScroll .month-item').forEach(item => {
                 item.addEventListener('click', function() {
@@ -228,31 +294,31 @@
                 const status = due ? due.status : 'pending';
                 const label = status === 'paid' ? 'Payé' : (status === 'partial' ? 'Partiel' : 'Impayé');
                 const badge = status === 'paid' ? 'badge-paid' : (status === 'partial' ? 'badge-partial' : 'badge-unpaid');
-                return <tr>
+                return `<tr>
                     <td><strong>${u.unit_number}</strong></td>
                     <td>${amount} MAD</td>
                     <td><span class="badge ${badge}">${label}</span></td>
-                </tr>;
+                </tr>`;
             }).join('');
 
-            document.getElementById('cotList').innerHTML = 
+            document.getElementById('cotList').innerHTML = `
                 <table>
                     <thead><tr><th>Appartement</th><th>Montant</th><th>Statut</th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
-            ;
+            `;
         }
 
         async function loadExpenses() {
             const { data, error } = await sb.from('expenses').select().order('expense_date', { ascending: false }).limit(50);
             if (error) throw error;
-            let rows = data.map(e => <tr>
+            let rows = data.map(e => `<tr>
                 <td>${e.expense_date}</td>
                 <td>${e.description}</td>
                 <td>${e.amount} MAD</td>
                 <td>${e.status}</td>
-            </tr>).join('');
-            document.getElementById('content').innerHTML = 
+            </tr>`).join('');
+            document.getElementById('content').innerHTML = `
                 <div class="section">
                     <h2>Dépenses</h2>
                     <table>
@@ -260,20 +326,20 @@
                         <tbody>${rows}</tbody>
                     </table>
                 </div>
-            ;
+            `;
         }
 
         async function loadTreasury() {
             const { data: balance } = await sb.from('v_treasury_balance').select().single();
             const { data: movements, error } = await sb.from('treasury_movements').select().order('movement_date', { ascending: false }).limit(40);
             if (error) throw error;
-            let rows = movements.map(m => <tr>
+            let rows = movements.map(m => `<tr>
                 <td>${m.movement_date}</td>
                 <td>${m.description}</td>
                 <td>${m.movement_type}</td>
                 <td style="color:${m.amount >= 0 ? '#2E7D32' : '#d32f2f'}; font-weight:600;">${m.amount} MAD</td>
-            </tr>).join('');
-            document.getElementById('content').innerHTML = 
+            </tr>`).join('');
+            document.getElementById('content').innerHTML = `
                 <div class="cards">
                     <div class="card">
                         <div class="label">Solde disponible</div>
@@ -287,12 +353,12 @@
                         <tbody>${rows}</tbody>
                     </table>
                 </div>
-            ;
+            `;
         }
 
         function showAddForm() {
-            const monthOptions = months.map((m, i) => <div class="month-item" data-month="${i+1}">${m}</div>).join('');
-            document.getElementById('content').innerHTML = 
+            const monthOptions = months.map((m, i) => `<div class="month-item" data-month="${i+1}">${m}</div>`).join('');
+            document.getElementById('content').innerHTML = `
                 <div class="section">
                     <h2>Ajouter une opération</h2>
                     <div class="filters">
@@ -329,7 +395,7 @@
                     </div>
                     <button class="btn btn-primary" onclick="saveOperation()">Enregistrer</button>
                 </div>
-            ;
+            `;
             loadUnitsForSelect();
             document.querySelectorAll('.month-item').forEach(item => {
                 item.addEventListener('click', function() {
@@ -344,7 +410,7 @@
             const { data } = await sb.from('units').select('id, unit_number').order('unit_number');
             const sel = document.getElementById('unitSelect');
             if (sel && data) {
-                sel.innerHTML = data.map(u => <option value="${u.id}">${u.unit_number}</option>).join('');
+                sel.innerHTML = data.map(u => `<option value="${u.id}">${u.unit_number}</option>`).join('');
             }
         }
 
@@ -438,22 +504,22 @@
             doc.setTextColor(0);
             doc.text('REÇU DE PAIEMENT', 105, 32, { align: 'center' });
             doc.setFontSize(11);
-            doc.text(N° ${receipt.receipt_number}, 20, 50);
-            doc.text(Propriétaire : ${ownerName || receipt.owner_name}, 20, 60);
-            doc.text(Montant : ${receipt.amount} MAD, 20, 70);
-            doc.text(Motif : ${receipt.payment_reason}, 20, 80);
-            doc.text(Période : ${receipt.period_month}/${receipt.period_year}, 20, 90);
-            doc.text(Date : ${new Date().toLocaleDateString('fr-FR')}, 20, 100);
+            doc.text(`N° ${receipt.receipt_number}`, 20, 50);
+            doc.text(`Propriétaire : ${ownerName || receipt.owner_name}`, 20, 60);
+            doc.text(`Montant : ${receipt.amount} MAD`, 20, 70);
+            doc.text(`Motif : ${receipt.payment_reason}`, 20, 80);
+            doc.text(`Période : ${receipt.period_month}/${receipt.period_year}`, 20, 90);
+            doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, 20, 100);
             doc.text('Statut : VALIDE', 20, 110);
             doc.setFontSize(9);
             doc.text('Signature du syndic : _________________', 20, 140);
             // QR Code
             const qrDiv = document.createElement('div');
-            new QRCode(qrDiv, { text: https://glowing-travesseiro-8a4ef9.netlify.app/verification/${receipt.verification_token}, width: 80, height: 80 });
+            new QRCode(qrDiv, { text: `https://glowing-travesseiro-8a4ef9.netlify.app/verification/${receipt.verification_token}`, width: 80, height: 80 });
             setTimeout(() => {
                 const canvas = qrDiv.querySelector('canvas');
                 if (canvas) doc.addImage(canvas.toDataURL(), 'PNG', 140, 50, 50, 50);
-                doc.save(Recu_${receipt.receipt_number}.pdf);
+                doc.save(`Recu_${receipt.receipt_number}.pdf`);
             }, 500);
         }
 
