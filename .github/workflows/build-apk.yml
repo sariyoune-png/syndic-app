@@ -34,12 +34,64 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Configure release signing
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          set -euo pipefail
+          KEYPASS=$(openssl rand -base64 24 | tr -d '/+=')
+          keytool -genkeypair -keystore "$RUNNER_TEMP/release.keystore" -alias syndic \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$KEYPASS" -keypass "$KEYPASS" \
+            -dname "CN=Syndic Immeuble, OU=Syndic, O=Syndic, C=MA"
+          export KEYSTORE_FILE="$RUNNER_TEMP/release.keystore"
+          export KEYSTORE_PASSWORD="$KEYPASS"
+          export KEY_ALIAS=syndic
+          export KEY_PASSWORD="$KEYPASS"
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle")
+          text = p.read_text()
+          if "signingConfigs" not in text:
+              block = """
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("KEYSTORE_FILE"))
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+          """
+              text = text.replace("buildTypes {", block + "\n    buildTypes {", 1)
+          old = """        release {
+              minifyEnabled false
+              proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+          }"""
+          new = """        release {
+              minifyEnabled false
+              proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+              signingConfig signingConfigs.release
+          }"""
+          if old not in text:
+              raise SystemExit("release buildType block not found")
+          p.write_text(text.replace(old, new, 1))
+          print("signing config injected")
+          PY
+          # persist env for the next step
+          {
+            echo "KEYSTORE_FILE=$KEYSTORE_FILE"
+            echo "KEYSTORE_PASSWORD=$KEYPASS"
+            echo "KEY_ALIAS=syndic"
+            echo "KEY_PASSWORD=$KEYPASS"
+          } >> "$GITHUB_ENV"
 
-      - name: Upload APK
+      - name: Build release APK
+        working-directory: android
+        run: chmod +x ./gradlew && ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: syndic-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: syndic-apk-release
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
