@@ -43,47 +43,15 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass "$KEYPASS" -keypass "$KEYPASS" \
             -dname "CN=Syndic Immeuble, OU=Syndic, O=Syndic, C=MA"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=$KEYPASS" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=syndic" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=$KEYPASS" >> "$GITHUB_ENV"
           export KEYSTORE_FILE="$RUNNER_TEMP/release.keystore"
           export KEYSTORE_PASSWORD="$KEYPASS"
           export KEY_ALIAS=syndic
           export KEY_PASSWORD="$KEYPASS"
-          python3 << 'PY'
-          from pathlib import Path
-          p = Path("app/build.gradle")
-          text = p.read_text()
-          if "signingConfigs" not in text:
-              block = """
-              signingConfigs {
-                  release {
-                      storeFile file(System.getenv("KEYSTORE_FILE"))
-                      storePassword System.getenv("KEYSTORE_PASSWORD")
-                      keyAlias System.getenv("KEY_ALIAS")
-                      keyPassword System.getenv("KEY_PASSWORD")
-                  }
-              }
-          """
-              text = text.replace("buildTypes {", block + "\n    buildTypes {", 1)
-          old = """        release {
-              minifyEnabled false
-              proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-          }"""
-          new = """        release {
-              minifyEnabled false
-              proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-              signingConfig signingConfigs.release
-          }"""
-          if old not in text:
-              raise SystemExit("release buildType block not found")
-          p.write_text(text.replace(old, new, 1))
-          print("signing config injected")
-          PY
-          # persist env for the next step
-          {
-            echo "KEYSTORE_FILE=$KEYSTORE_FILE"
-            echo "KEYSTORE_PASSWORD=$KEYPASS"
-            echo "KEY_ALIAS=syndic"
-            echo "KEY_PASSWORD=$KEYPASS"
-          } >> "$GITHUB_ENV"
+          python3 "$GITHUB_WORKSPACE/scripts/patch_release_signing.py"
 
       - name: Build release APK
         working-directory: android
