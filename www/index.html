@@ -11,8 +11,10 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fa; color: #333; }
-        header { background: #2E7D32; color: white; padding: 16px 20px; }
-        header h1 { font-size: 1.4rem; }
+        header { background: #2E7D32; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+        header h1 { font-size: 1.4rem; flex: 1; }
+        .apk-btn { background: white; color: #2E7D32; padding: 8px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+        .apk-btn:hover { background: #e8f5e9; }
         nav { display: flex; gap: 6px; padding: 12px 16px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
         nav button { padding: 6px 12px; border: none; background: #e8f5e9; border-radius: 16px; cursor: pointer; font-weight: 500; white-space: nowrap; font-size: 0.85rem; }
         nav button.active { background: #2E7D32; color: white; }
@@ -49,12 +51,13 @@
     </style>
 </head>
 <body>
-    <header style="display:flex; align-items:center; gap:12px;">
+    <header>
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
             <rect width="40" height="40" rx="8" fill="white"/>
             <path d="M8 28V16L20 8L32 16V28H24V20H16V28H8Z" fill="#2E7D32"/>
         </svg>
         <h1>Syndic - Gestion de copropriété</h1>
+        <a class="apk-btn" id="apkDownload" href="https://github.com/sariyoune-png/syndic-app/releases/download/v1.0.0/Syndic-release.apk" download>Télécharger l'APK</a>
     </header>
     <nav>
         <button class="active" data-section="dashboard">Accueil</button>
@@ -85,6 +88,12 @@
                 loadSection(this.dataset.section);
             });
         });
+
+        // Masquer le bouton APK si on est déjà dans l'application Android
+        if (window.Capacitor || /Android/i.test(navigator.userAgent) && window.location.protocol === 'capacitor:') {
+            const apkBtn = document.getElementById('apkDownload');
+            if (apkBtn) apkBtn.style.display = 'none';
+        }
 
         async function loadSection(section) {
             const content = document.getElementById('content');
