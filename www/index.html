@@ -1,529 +1,239 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    
-    <meta name="theme-color" content="#2E7D32">
-    <title>Syndic - Gestion de copropriété</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fa; color: #333; }
-        header { background: #2E7D32; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
-        header h1 { font-size: 1.4rem; flex: 1; }
-        .apk-btn { background: white; color: #2E7D32; padding: 8px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
-        .apk-btn:hover { background: #e8f5e9; }
-        nav { display: flex; gap: 6px; padding: 12px 16px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
-        nav button { padding: 6px 12px; border: none; background: #e8f5e9; border-radius: 16px; cursor: pointer; font-weight: 500; white-space: nowrap; font-size: 0.85rem; }
-        nav button.active { background: #2E7D32; color: white; }
-        main { padding: 20px; max-width: 960px; margin: 0 auto; }
-        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
-        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .card .label { font-size: 0.85rem; color: #666; }
-        .card .value { font-size: 1.4rem; font-weight: 700; color: #2E7D32; margin-top: 4px; }
-        .section { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .section h2 { font-size: 1.1rem; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eee; }
-        th { font-size: 0.85rem; color: #666; }
-        .status-paid { color: #2E7D32; font-weight: 600; }
-        .status-partial { color: #f57c00; font-weight: 600; }
-        .status-unpaid { color: #d32f2f; font-weight: 600; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-        .badge-paid { background: #e8f5e9; color: #2E7D32; }
-        .badge-partial { background: #fff3e0; color: #f57c00; }
-        .badge-unpaid { background: #ffebee; color: #d32f2f; }
-        .loading { text-align: center; padding: 40px; color: #666; }
-        .error { background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
-        .btn-primary { background: #2E7D32; color: white; }
-        .btn-secondary { background: #e0e0e0; }
-        .month-scroll { max-height: 160px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: white; }
-        .month-item { padding: 10px 14px; cursor: pointer; }
-        .month-item:hover, .month-item.selected { background: #e8f5e9; }
-        .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: end; }
-        .filters .form-group { margin: 0; min-width: 140px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Syndic – Gestion de copropriété</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#1b2430;--mu:#6b7686;--pr:#0b6b4f;--prd:#08503b;--rd:#c0392b;--or:#d98a00;--bd:#e2e7ee}
+@media (prefers-color-scheme:dark){:root{--bg:#10151b;--card:#1a212a;--tx:#e8edf3;--mu:#98a3b3;--pr:#2fb386;--prd:#1f8c68;--rd:#ef6a5b;--or:#f0b13b;--bd:#2a3340}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:72px}
+header{background:var(--pr);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0;flex:1}header button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:13px}
+main{max-width:900px;margin:0 auto;padding:14px 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi small{color:var(--mu);display:block}.kpi b{font-size:21px}.neg{color:var(--rd)}.pos{color:var(--pr)}.warn{color:var(--or)}
+h2{font-size:16px;margin:4px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:start}th{color:var(--mu);font-weight:600;font-size:12px}
+td.n,th.n{text-align:end;font-variant-numeric:tabular-nums}.scroll{overflow-x:auto}
+nav{position:fixed;bottom:0;inset-inline:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav a{flex:1;text-align:center;padding:9px 2px;font-size:11px;color:var(--mu);text-decoration:none}nav a.on{color:var(--pr);font-weight:700}nav a span{display:block;font-size:19px}
+label{display:block;font-size:13px;color:var(--mu);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:9px;padding:11px 16px;font:inherit;font-weight:600;margin-top:12px}.btn.sec{background:transparent;color:var(--pr);border:1px solid var(--pr)}.btn.sm{padding:5px 9px;font-size:12px;margin:0}.btn.dg{background:var(--rd)}
+.btn:disabled{opacity:.5}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:var(--bd)}.tag.paid{background:#d6f3e6;color:#075e3f}.tag.partial{background:#fdecc8;color:#7a4b00}.tag.pending{background:#fbd9d4;color:#8a1d12}.tag.cancelled{background:var(--bd);color:var(--mu)}
+.msg{padding:10px;border-radius:8px;margin:8px 0}.msg.err{background:#fbd9d4;color:#8a1d12}.msg.ok{background:#d6f3e6;color:#075e3f}
+#login{max-width:380px;margin:14vh auto;padding:0 16px}
+.bar{display:flex;align-items:flex-end;gap:6px;height:120px}.bar div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;height:100%;font-size:10px;color:var(--mu)}.bar i{display:block;width:100%;border-radius:3px 3px 0 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media print{header,nav,.noprint{display:none!important}}
+</style>
 </head>
 <body>
-    <header>
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="8" fill="white"/>
-            <path d="M8 28V16L20 8L32 16V28H24V20H16V28H8Z" fill="#2E7D32"/>
-        </svg>
-        <h1>Syndic - Gestion de copropriété</h1>
-        <a class="apk-btn" id="apkDownload" href="https://github.com/sariyoune-png/syndic-app/releases/download/v1.0.0/Syndic-release.apk" download>Télécharger l'APK</a>
-    </header>
-    <nav>
-        <button class="active" data-section="dashboard">Accueil</button>
-        <button data-section="apartments">Appartements</button>
-        <button data-section="cotisations">Cotisations</button>
-        <button data-section="expenses">Dépenses</button>
-        <button data-section="treasury">Trésorerie</button>
-        <button data-section="add">Ajouter</button>
-    </nav>
-    <main id="content">
-        <div class="loading">Chargement...</div>
-    </main>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const SB_URL='https://nactxqbnqcdbklddmraa.supabase.co', SB_KEY='sb_publishable_vuD8aWG-MEhraGtGPFp2tg_YrSiL1NX';
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const T={fr:{app:'Syndic',login:'Connexion',email:'E-mail',pwd:'Mot de passe',signin:'Se connecter',logout:'Quitter',dash:'Accueil',dues:'Cotisations',exp:'Dépenses',treas:'Trésorerie',more:'Plus',
+cash:'Trésorerie réelle',pending:'Dépenses à payer',after:'Après dettes',arrears:'Impayés',collected:'Cotisations encaissées',expected:'Cotisations attendues',flows:'Flux mensuels (12 mois)',in:'Entrées',out:'Sorties',
+unit:'Appartement',amount:'Montant (MAD)',date:'Date',method:'Mode',cash_:'Espèces',transfer:'Virement',check:'Chèque',other:'Autre',save:'Enregistrer',paid:'Payé',partial:'Partiel',pend:'En attente',period:'Période',due:'Dû',remaining:'Reste',
+newpay:'Nouveau paiement',newexp:'Nouvelle dépense',desc:'Désignation',cat:'Catégorie',supplier:'Fournisseur',status:'Statut',cancel:'Annuler',reason:'Motif',receipts:'Reçus',genDues:'Générer les cotisations du mois',
+journal:'Journal de trésorerie',balance:'Solde',export:'Exporter CSV',print:'Imprimer',lang:'العربية',pdf:'Reçu PDF',wa:'WhatsApp',verify:'Vérification du reçu',valid:'Reçu valide',invalid:'Reçu invalide ou annulé',unknown:'Reçu inconnu',
+late:'en retard',none:'Aucune donnée',saved:'Enregistré',confirm:'Confirmer ?',paidexp:'Payée',pendexp:'À payer',payNow:'Payer',report:'Rapport annuel'},
+ar:{app:'السانديك',login:'تسجيل الدخول',email:'البريد',pwd:'كلمة المرور',signin:'دخول',logout:'خروج',dash:'الرئيسية',dues:'المساهمات',exp:'المصاريف',treas:'الخزينة',more:'المزيد',
+cash:'الخزينة الفعلية',pending:'مصاريف غير مؤداة',after:'بعد الديون',arrears:'المتأخرات',collected:'المساهمات المحصلة',expected:'المساهمات المنتظرة',flows:'التدفقات الشهرية',in:'المداخيل',out:'المصاريف',
+unit:'الشقة',amount:'المبلغ (درهم)',date:'التاريخ',method:'الطريقة',cash_:'نقداً',transfer:'تحويل',check:'شيك',other:'أخرى',save:'حفظ',paid:'مؤدى',partial:'جزئي',pend:'في الانتظار',period:'الفترة',due:'المستحق',remaining:'المتبقي',
+newpay:'دفعة جديدة',newexp:'مصروف جديد',desc:'البيان',cat:'الصنف',supplier:'المورد',status:'الحالة',cancel:'إلغاء',reason:'السبب',receipts:'الوصولات',genDues:'إنشاء مساهمات الشهر',
+journal:'سجل الخزينة',balance:'الرصيد',export:'تصدير CSV',print:'طباعة',lang:'Français',pdf:'وصل PDF',wa:'واتساب',verify:'التحقق من الوصل',valid:'وصل صحيح',invalid:'وصل غير صالح أو ملغى',unknown:'وصل غير معروف',
+late:'متأخر',none:'لا توجد بيانات',saved:'تم الحفظ',confirm:'تأكيد؟',paidexp:'مؤدى',pendexp:'غير مؤدى',payNow:'أداء',report:'التقرير السنوي'}};
+let lang=(()=>{try{return localStorage.getItem('lang')||'fr'}catch(e){return 'fr'}})();
+const t=k=>T[lang][k]||k;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=n=>Number(n||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>num(n)+' MAD';
+const today=()=>new Date().toISOString().slice(0,10);
+const uuid=()=>crypto.randomUUID();
+const $=s=>document.querySelector(s);
+const MON=lang=>['01','02','03','04','05','06','07','08','09','10','11','12'];
+let S={tab:'dash',units:[],cats:[],msg:null,user:null};
 
-    <script></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fa; color: #333; }
-        header { background: #2E7D32; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
-        header h1 { font-size: 1.4rem; flex: 1; }
-        .apk-btn { background: white; color: #2E7D32; padding: 8px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
-        .apk-btn:hover { background: #e8f5e9; }
-        nav { display: flex; gap: 6px; padding: 12px 16px; background: white; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
-        nav button { padding: 6px 12px; border: none; background: #e8f5e9; border-radius: 16px; cursor: pointer; font-weight: 500; white-space: nowrap; font-size: 0.85rem; }
-        nav button.active { background: #2E7D32; color: white; }
-        main { padding: 20px; max-width: 960px; margin: 0 auto; }
-        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
-        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .card .label { font-size: 0.85rem; color: #666; }
-        .card .value { font-size: 1.4rem; font-weight: 700; color: #2E7D32; margin-top: 4px; }
-        .section { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .section h2 { font-size: 1.1rem; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eee; }
-        th { font-size: 0.85rem; color: #666; }
-        .status-paid { color: #2E7D32; font-weight: 600; }
-        .status-partial { color: #f57c00; font-weight: 600; }
-        .status-unpaid { color: #d32f2f; font-weight: 600; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-        .badge-paid { background: #e8f5e9; color: #2E7D32; }
-        .badge-partial { background: #fff3e0; color: #f57c00; }
-        .badge-unpaid { background: #ffebee; color: #d32f2f; }
-        .loading { text-align: center; padding: 40px; color: #666; }
-        .error { background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
-        .btn-primary { background: #2E7D32; color: white; }
-        .btn-secondary { background: #e0e0e0; }
-        .month-scroll { max-height: 160px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: white; }
-        .month-item { padding: 10px 14px; cursor: pointer; }
-        .month-item:hover, .month-item.selected { background: #e8f5e9; }
-        .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: end; }
-        .filters .form-group { margin: 0; min-width: 140px; }
-    </style>
-</head>
-<body>
-    <header>
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="8" fill="white"/>
-            <path d="M8 28V16L20 8L32 16V28H24V20H16V28H8Z" fill="#2E7D32"/>
-        </svg>
-        <h1>Syndic - Gestion de copropriété</h1>
-        <a class="apk-btn" id="apkDownload" href="https://github.com/sariyoune-png/syndic-app/releases/download/v1.0.0/Syndic-release.apk" download>Télécharger l'APK</a>
-    </header>
-    <nav>
-        <button class="active" data-section="dashboard">Accueil</button>
-        <button data-section="apartments">Appartements</button>
-        <button data-section="cotisations">Cotisations</button>
-        <button data-section="expenses">Dépenses</button>
-        <button data-section="treasury">Trésorerie</button>
-        <button data-section="add">Ajouter</button>
-    </nav>
-    <main id="content">
-        <div class="loading">Chargement...</div>
-    </main>
+function setLang(l){lang=l;try{localStorage.setItem('lang',l)}catch(e){}document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';render()}
+function flash(text,ok){S.msg={text,ok};render();setTimeout(()=>{S.msg=null;render()},4000)}
+const msgHtml=()=>S.msg?`<div class="msg ${S.msg.ok?'ok':'err'}">${esc(S.msg.text)}</div>`:'';
+async function rpc(fn,args){const {data,error}=await sb.rpc(fn,args);if(error)throw new Error(error.message);return data}
+async function q(p){const {data,error}=await p;if(error)throw new Error(error.message);return data}
 
-    <script>
-        const SUPABASE_URL = 'https://nactxqbnqcdbklddmraa.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_vuD8aWG-MEhraGtGPFp2tg_YrSiL1NX';
-        let sb;
-        try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) {}
+/* ---------- routing / auth ---------- */
+async function boot(){
+  document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.documentElement.lang=lang;
+  const m=location.hash.match(/^#\/verify\/(.+)$/);
+  if(m){return renderVerify(decodeURIComponent(m[1]))}
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){return renderLogin()}
+  S.user=session.user;
+  try{
+    const ok=await rpc('is_admin');
+    if(!ok){await sb.auth.signOut();return renderLogin('Accès réservé à l\'administrateur')}
+    S.units=await q(sb.from('units').select('id,unit_number,monthly_fee').is('deleted_at',null).order('unit_number'));
+    S.cats=await q(sb.from('expense_categories').select('id,name').eq('is_active',true).order('name'));
+  }catch(e){return renderLogin(e.message)}
+  render();
+}
+function renderLogin(err){
+  $('#app').innerHTML=`<div id="login"><div class="card"><h2>${esc(t('app'))} – ${esc(t('login'))}</h2>
+  ${err?`<div class="msg err">${esc(err)}</div>`:''}
+  <label>${t('email')}</label><input id="em" type="email" autocomplete="username">
+  <label>${t('pwd')}</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="btn" style="width:100%" id="go">${t('signin')}</button>
+  <button class="btn sec" style="width:100%" onclick="setLang(lang==='fr'?'ar':'fr')">${t('lang')}</button></div></div>`;
+  $('#go').onclick=async()=>{
+    const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+    if(error)return renderLogin(error.message);boot()};
+  $('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
+}
+async function renderVerify(token){
+  $('#app').innerHTML=`<div id="login"><div class="card"><h2>${t('verify')}</h2><div id="vr">…</div></div></div>`;
+  try{
+    const r=await rpc('verify_receipt',{p_token:token});
+    const cls=r.valid?'ok':'err',txt=r.valid?t('valid'):(r.status==='unknown'?t('unknown'):t('invalid'));
+    $('#vr').innerHTML=`<div class="msg ${cls}"><b>${esc(txt)}</b></div>`+(r.receipt_number?`<p>N° ${esc(r.receipt_number)}<br>${esc(r.unit)} – ${esc(r.building)}<br>${money(r.amount)} – ${esc(r.payment_date)}</p>`:'');
+  }catch(e){$('#vr').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
+}
+function shell(body){
+  const tabs=[['dash','🏠',t('dash')],['dues','📅',t('dues')],['exp','🧾',t('exp')],['treas','💰',t('treas')],['more','☰',t('more')]];
+  $('#app').innerHTML=`<header><h1>${t('app')}</h1><button onclick="setLang(lang==='fr'?'ar':'fr')">${t('lang')}</button><button onclick="sb.auth.signOut().then(boot)">${t('logout')}</button></header>
+  <main>${msgHtml()}${body}</main><nav>${tabs.map(([k,i,l])=>`<a href="#" class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render();return false"><span>${i}</span>${l}</a>`).join('')}</nav>`;
+}
+async function render(){
+  if(!S.user)return;
+  shell('<div class="card">…</div>');
+  try{const html=await views[S.tab]();shell(html);if(after[S.tab])after[S.tab]()}catch(e){shell(`<div class="msg err">${esc(e.message)}</div>`)}
+}
 
-        let selectedMonth = new Date().getMonth() + 1;
-        let selectedYear = 2026;
-        const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+/* ---------- views ---------- */
+const views={
+async dash(){
+  const [c,fl,ub]=await Promise.all([q(sb.from('v_cash_summary').select('*').limit(1)),q(sb.from('v_monthly_flows').select('*').order('month',{ascending:false}).limit(12)),q(sb.from('v_unit_balances').select('*').order('unit_number'))]);
+  const k=c[0]||{};fl.reverse();
+  const mx=Math.max(1,...fl.map(f=>Math.max(+f.inflows,+f.outflows)));
+  const bars=fl.map(f=>`<div title="${esc(f.month)}"><span style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%"><i style="background:var(--pr);height:${(+f.inflows/mx*100)}%"></i><i style="background:var(--rd);height:${(+f.outflows/mx*100)}%"></i></span>${esc(String(f.month).slice(5,7))}</div>`).join('');
+  return `<div class="grid">
+  <div class="card kpi"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
+  <div class="card kpi"><small>${t('pending')}</small><b class="warn">${money(k.pending_expenses)}</b></div>
+  <div class="card kpi"><small>${t('after')}</small><b>${money(k.balance_after_debts)}</b></div>
+  <div class="card kpi"><small>${t('arrears')}</small><b class="neg">${money(k.dues_arrears)}</b></div></div>
+  <div class="card"><h2>${t('flows')}</h2>${fl.length?`<div class="bar">${bars}</div><div class="row" style="font-size:12px;margin-top:6px"><span style="color:var(--pr)">■ ${t('in')}</span><span style="color:var(--rd)">■ ${t('out')}</span></div>`:t('none')}</div>
+  <div class="card"><h2>${t('unit')}</h2><div class="scroll"><table><tr><th>${t('unit')}</th><th class="n">${t('due')}</th><th class="n">${t('paid')}</th><th class="n">${t('arrears')}</th></tr>
+  ${ub.map(u=>`<tr><td>${esc(u.unit_number)} ${u.is_late?`<span class="tag pending">${u.late_months} ${t('late')}</span>`:''}</td><td class="n">${num(u.total_due)}</td><td class="n">${num(u.total_paid)}</td><td class="n ${+u.arrears>0?'neg':''}">${num(u.arrears)}</td></tr>`).join('')}</table></div></div>`;
+},
+async dues(){
+  const rows=await q(sb.from('v_dues_detail').select('*').order('period_year',{ascending:false}).order('period_month',{ascending:false}).limit(200));
+  const opts=S.units.map(u=>`<option value="${esc(u.id)}">${esc(u.unit_number)}</option>`).join('');
+  return `<div class="card"><h2>${t('newpay')}</h2>
+  <label>${t('unit')}</label><select id="pu">${opts}</select>
+  <label>${t('amount')}</label><input id="pa" type="number" inputmode="decimal" min="0.01" step="0.01">
+  <div class="row"><div style="flex:1"><label>${t('date')}</label><input id="pd" type="date" value="${today()}"></div>
+  <div style="flex:1"><label>${t('method')}</label><select id="pm"><option value="cash">${t('cash_')}</option><option value="transfer">${t('transfer')}</option><option value="check">${t('check')}</option><option value="other">${t('other')}</option></select></div></div>
+  <button class="btn" id="paysave">${t('save')}</button>
+  <button class="btn sec" id="gen">${t('genDues')}</button></div>
+  <div class="card"><h2>${t('dues')}</h2><div class="scroll"><table><tr><th>${t('unit')}</th><th>${t('period')}</th><th class="n">${t('due')}</th><th class="n">${t('paid')}</th><th class="n">${t('remaining')}</th><th>${t('status')}</th></tr>
+  ${rows.map(r=>`<tr><td>${esc(r.unit_number)}</td><td>${String(r.period_month).padStart(2,'0')}/${esc(r.period_year)}</td><td class="n">${num(r.due_amount)}</td><td class="n">${num(r.paid_amount)}</td><td class="n">${num(r.remaining)}</td><td><span class="tag ${esc(r.status)}">${esc(r.status==='paid'?t('paid'):r.status==='partial'?t('partial'):t('pend'))}</span></td></tr>`).join('')||`<tr><td colspan=6>${t('none')}</td></tr>`}</table></div></div>`;
+},
+async exp(){
+  const rows=await q(sb.from('expenses').select('id,description,amount,expense_date,status,supplier,category_id,deleted_at').is('deleted_at',null).order('expense_date',{ascending:false}).limit(200));
+  const cn=Object.fromEntries(S.cats.map(c=>[c.id,c.name]));
+  return `<div class="card"><h2>${t('newexp')}</h2>
+  <label>${t('desc')}</label><input id="ed" maxlength="200">
+  <label>${t('amount')}</label><input id="ea" type="number" inputmode="decimal" min="0.01" step="0.01">
+  <label>${t('cat')}</label><select id="ec"><option value="">—</option>${S.cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select>
+  <div class="row"><div style="flex:1"><label>${t('date')}</label><input id="edt" type="date" value="${today()}"></div>
+  <div style="flex:1"><label>${t('status')}</label><select id="es"><option value="paid">${t('paidexp')}</option><option value="pending">${t('pendexp')}</option></select></div></div>
+  <label>${t('supplier')}</label><input id="esu" maxlength="120">
+  <button class="btn" id="expsave">${t('save')}</button></div>
+  <div class="card"><h2>${t('exp')}</h2><div class="scroll"><table><tr><th>${t('date')}</th><th>${t('desc')}</th><th>${t('cat')}</th><th class="n">${t('amount')}</th><th></th></tr>
+  ${rows.map(r=>`<tr><td>${esc(r.expense_date)}</td><td>${esc(r.description)}</td><td>${esc(cn[r.category_id]||'')}</td><td class="n">${num(r.amount)}</td><td>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button> `:''}<button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></td></tr>`).join('')||`<tr><td colspan=5>${t('none')}</td></tr>`}</table></div></div>`;
+},
+async treas(){
+  const rows=await q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(300));
+  S.journal=rows;
+  return `<div class="card"><div class="row"><h2 style="flex:1">${t('journal')}</h2><button class="btn sm sec noprint" id="csv">${t('export')}</button><button class="btn sm sec noprint" onclick="print()">${t('print')}</button></div>
+  <div class="scroll"><table><tr><th>${t('date')}</th><th>${t('desc')}</th><th class="n">${t('amount')}</th><th class="n">${t('balance')}</th></tr>
+  ${rows.map(r=>`<tr><td>${esc(r.movement_date)}</td><td>${esc(r.description)}${r.movement_type==='cancellation'?' <span class="tag cancelled">↩</span>':''}</td><td class="n ${+r.amount<0?'neg':'pos'}">${num(r.amount)}</td><td class="n">${num(r.running_balance)}</td></tr>`).join('')||`<tr><td colspan=4>${t('none')}</td></tr>`}</table></div></div>`;
+},
+async more(){
+  const rc=await q(sb.from('receipts').select('id,receipt_number,owner_name,amount,payment_date,status,verification_token,amount_in_words,period_label,payment_method,remaining_balance').order('created_at',{ascending:false}).limit(100));
+  S.receipts=rc;
+  return `<div class="card"><h2>${t('receipts')}</h2><div class="scroll"><table><tr><th>N°</th><th>${t('unit')}</th><th class="n">${t('amount')}</th><th></th></tr>
+  ${rc.map(r=>`<tr><td>${esc(r.receipt_number)}${r.status!=='valid'?' <span class="tag cancelled">✕</span>':''}</td><td>${esc(r.owner_name)}<br><small>${esc(r.payment_date)}</small></td><td class="n">${num(r.amount)}</td><td><button class="btn sm" data-pdf="${esc(r.id)}">${t('pdf')}</button> <button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button></td></tr>`).join('')||`<tr><td colspan=4>${t('none')}</td></tr>`}</table></div></div>
+  <div class="card"><h2>${t('report')}</h2><button class="btn sec" id="rep">${t('export')} (CSV)</button></div>`;
+}};
 
-        document.querySelectorAll('nav button').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                loadSection(this.dataset.section);
-            });
-        });
-
-        // Masquer le bouton APK si on est déjà dans l'application Android
-        if (window.Capacitor || /Android/i.test(navigator.userAgent) && window.location.protocol === 'capacitor:') {
-            const apkBtn = document.getElementById('apkDownload');
-            if (apkBtn) apkBtn.style.display = 'none';
-        }
-
-        async function loadSection(section) {
-            const content = document.getElementById('content');
-            content.innerHTML = '<div class="loading">Chargement...</div>';
-            try {
-                if (section === 'dashboard') await loadDashboard();
-                else if (section === 'apartments') await loadApartments();
-                else if (section === 'cotisations') await loadCotisations();
-                else if (section === 'expenses') await loadExpenses();
-                else if (section === 'treasury') await loadTreasury();
-                else if (section === 'add') showAddForm();
-            } catch (err) {
-                content.innerHTML = '<div class="error">Erreur : ' + err.message + '</div>';
-            }
-        }
-
-        async function loadDashboard() {
-            const { data: dash } = await sb.from('v_dashboard').select().single();
-            const { data: dues } = await sb.from('dues').select('amount, status');
-            const outstanding = (dues || []).reduce((sum, d) => {
-                return sum + (d.status !== 'paid' && d.status !== 'cancelled' ? parseFloat(d.amount) || 0 : 0);
-            }, 0);
-
-            const { data: expenses } = await sb.from('expenses').select('amount, status');
-            const paidExpenses = (expenses || []).filter(e => e.status === 'paid').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-            const pendingExpenses = (expenses || []).filter(e => e.status === 'pending').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-
-            // Valeurs de référence Excel
-            const totalEncaissements = 3412;
-            const totalDepenses = 3271.36;
-            const solde = 140.64;
-
-            document.getElementById('content').innerHTML = `
-                <div class="cards">
-                    <div class="card"><div class="label">Solde trésorerie</div><div class="value" style="color:#2E7D32;">${solde.toFixed(2)} MAD</div></div>
-                    <div class="card"><div class="label">Impayés</div><div class="value" style="color:#d32f2f;">-${outstanding.toFixed(2)} MAD</div></div>
-                    <div class="card"><div class="label">Total encaissements</div><div class="value">${totalEncaissements.toFixed(2)} MAD</div></div>
-                    <div class="card"><div class="label">Total dépenses</div><div class="value">${totalDepenses.toFixed(2)} MAD</div></div>
-                </div>
-                <div class="section">
-                    <h2>Résumé (référence Excel)</h2>
-                    <p>Cotisations copropriétaires : <strong>2 800.00 MAD</strong></p>
-                    <p>Cotisation spéciale débouchage : <strong>612.00 MAD</strong></p>
-                    <p>Femme de ménage : <strong>1 500.00 MAD</strong></p>
-                    <p>Achats : <strong>265.00 MAD</strong></p>
-                    <p>Autres dépenses : <strong>1 506.36 MAD</strong></p>
-                    <p>Dépenses en attente : <strong>${pendingExpenses.toFixed(2)} MAD</strong></p>
-                    <p>Nombre d'appartements : <strong>${dash?.unit_count || 4}</strong></p>
-                </div>
-            `;
-        }
-
-        async function loadApartments() {
-            const { data, error } = await sb.from('v_unit_financial_status').select().order('unit_number');
-            if (error) throw error;
-            let rows = data.map(u => {
-                const remaining = u.outstanding || 0;
-                const paid = u.total_paid || 0;
-                let status, cls, badge;
-                if (remaining <= 0) { status = 'Payé'; cls = 'status-paid'; badge = 'badge-paid'; }
-                else if (paid > 0) { status = 'Partiel'; cls = 'status-partial'; badge = 'badge-partial'; }
-                else { status = 'Impayé'; cls = 'status-unpaid'; badge = 'badge-unpaid'; }
-                return `<tr>
-                    <td><strong>${u.unit_number}</strong></td>
-                    <td>${paid} MAD</td>
-                    <td>${remaining} MAD</td>
-                    <td><span class="badge ${badge}">${status}</span></td>
-                </tr>`;
-            }).join('');
-            document.getElementById('content').innerHTML = `
-                <div class="section">
-                    <h2>Appartements</h2>
-                    <table>
-                        <thead><tr><th>Appartement</th><th>Payé</th><th>Reste</th><th>Statut</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        async function loadCotisations() {
-            const { data: units } = await sb.from('units').select('id, unit_number').order('unit_number');
-            const monthItems = months.map((m, i) => 
-                `<div class="month-item ${i+1 === selectedMonth ? 'selected' : ''}" data-month="${i+1}">${m}</div>`
-            ).join('');
-
-            document.getElementById('content').innerHTML = `
-                <div class="section">
-                    <h2>Cotisations</h2>
-                    <div class="filters">
-                        <div class="form-group">
-                            <label>Année</label>
-                            <select id="cotYear" onchange="selectedYear=parseInt(this.value); loadCotisations()">
-                                <option value="2026" ${selectedYear===2026?'selected':''}>2026</option>
-                                <option value="2025" ${selectedYear===2025?'selected':''}>2025</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex:1; min-width:180px;">
-                            <label>Mois</label>
-                            <div class="month-scroll" id="cotMonthScroll">${monthItems}</div>
-                        </div>
-                    </div>
-                    <div id="cotList"><div class="loading">Chargement...</div></div>
-                </div>
-            `;
-
-            document.querySelectorAll('#cotMonthScroll .month-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    selectedMonth = parseInt(this.dataset.month);
-                    document.querySelectorAll('#cotMonthScroll .month-item').forEach(i => i.classList.remove('selected'));
-                    this.classList.add('selected');
-                    loadCotisationsForMonth();
-                });
-            });
-
-            loadCotisationsForMonth();
-        }
-
-        async function loadCotisationsForMonth() {
-            const { data: units } = await sb.from('units').select('id, unit_number').order('unit_number');
-            const { data: dues } = await sb.from('dues')
-                .select('unit_id, amount, status')
-                .eq('period_year', selectedYear)
-                .eq('period_month', selectedMonth);
-
-            const duesMap = {};
-            (dues || []).forEach(d => { duesMap[d.unit_id] = d; });
-
-            let rows = (units || []).map(u => {
-                const due = duesMap[u.id];
-                const amount = due ? due.amount : 100;
-                const status = due ? due.status : 'pending';
-                const label = status === 'paid' ? 'Payé' : (status === 'partial' ? 'Partiel' : 'Impayé');
-                const badge = status === 'paid' ? 'badge-paid' : (status === 'partial' ? 'badge-partial' : 'badge-unpaid');
-                return `<tr>
-                    <td><strong>${u.unit_number}</strong></td>
-                    <td>${amount} MAD</td>
-                    <td><span class="badge ${badge}">${label}</span></td>
-                </tr>`;
-            }).join('');
-
-            document.getElementById('cotList').innerHTML = `
-                <table>
-                    <thead><tr><th>Appartement</th><th>Montant</th><th>Statut</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            `;
-        }
-
-        async function loadExpenses() {
-            const { data, error } = await sb.from('expenses').select().order('expense_date', { ascending: false }).limit(50);
-            if (error) throw error;
-            let rows = data.map(e => `<tr>
-                <td>${e.expense_date}</td>
-                <td>${e.description}</td>
-                <td>${e.amount} MAD</td>
-                <td>${e.status}</td>
-            </tr>`).join('');
-            document.getElementById('content').innerHTML = `
-                <div class="section">
-                    <h2>Dépenses</h2>
-                    <table>
-                        <thead><tr><th>Date</th><th>Description</th><th>Montant</th><th>Statut</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        async function loadTreasury() {
-            const { data: balance } = await sb.from('v_treasury_balance').select().single();
-            const { data: movements, error } = await sb.from('treasury_movements').select().order('movement_date', { ascending: false }).limit(40);
-            if (error) throw error;
-            let rows = movements.map(m => `<tr>
-                <td>${m.movement_date}</td>
-                <td>${m.description}</td>
-                <td>${m.movement_type}</td>
-                <td style="color:${m.amount >= 0 ? '#2E7D32' : '#d32f2f'}; font-weight:600;">${m.amount} MAD</td>
-            </tr>`).join('');
-            document.getElementById('content').innerHTML = `
-                <div class="cards">
-                    <div class="card">
-                        <div class="label">Solde disponible</div>
-                        <div class="value">${balance?.current_balance || 0} MAD</div>
-                    </div>
-                </div>
-                <div class="section">
-                    <h2>Journal de trésorerie</h2>
-                    <table>
-                        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Montant</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function showAddForm() {
-            const monthOptions = months.map((m, i) => `<div class="month-item" data-month="${i+1}">${m}</div>`).join('');
-            document.getElementById('content').innerHTML = `
-                <div class="section">
-                    <h2>Ajouter une opération</h2>
-                    <div class="filters">
-                        <div class="form-group">
-                            <label>Année</label>
-                            <select id="yearSelect">
-                                <option value="2026" selected>2026</option>
-                                <option value="2025">2025</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Mois</label>
-                            <div class="month-scroll" id="monthScroll">${monthOptions}</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select id="opType">
-                            <option value="payment">Paiement de cotisation</option>
-                            <option value="expense">Dépense</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Appartement</label>
-                        <select id="unitSelect"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Montant (MAD)</label>
-                        <input type="number" id="amount" step="0.01" value="100">
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <input type="text" id="desc" placeholder="Description">
-                    </div>
-                    <button class="btn btn-primary" onclick="saveOperation()">Enregistrer</button>
-                </div>
-            `;
-            loadUnitsForSelect();
-            document.querySelectorAll('.month-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    document.querySelectorAll('.month-item').forEach(i => i.classList.remove('selected'));
-                    this.classList.add('selected');
-                    selectedMonth = parseInt(this.dataset.month);
-                });
-            });
-        }
-
-        async function loadUnitsForSelect() {
-            const { data } = await sb.from('units').select('id, unit_number').order('unit_number');
-            const sel = document.getElementById('unitSelect');
-            if (sel && data) {
-                sel.innerHTML = data.map(u => `<option value="${u.id}">${u.unit_number}</option>`).join('');
-            }
-        }
-
-        async function saveOperation() {
-            const type = document.getElementById('opType').value;
-            const unitId = document.getElementById('unitSelect').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const desc = document.getElementById('desc').value || 'Opération';
-            const year = parseInt(document.getElementById('yearSelect').value);
-
-            if (!confirm('Confirmer l\'enregistrement ?')) return;
-
-            try {
-                if (type === 'payment') {
-                    const { data: due } = await sb.from('dues').select('id').eq('unit_id', unitId).eq('period_year', year).eq('period_month', selectedMonth).single();
-                    const { data: payment, error } = await sb.from('payments').insert({
-                        unit_id: unitId,
-                        building_id: 'a1111111-1111-1111-1111-111111111111',
-                        amount: amount,
-                        payment_date: new Date().toISOString().split('T')[0]
-                    }).select().single();
-                    if (error) throw error;
-                    if (due) {
-                        await sb.from('payment_allocations').insert({ payment_id: payment.id, due_id: due.id, amount: amount });
-                        await sb.from('dues').update({ status: 'paid' }).eq('id', due.id);
-                    }
-                    await sb.from('treasury_movements').insert({
-                        building_id: 'a1111111-1111-1111-1111-111111111111',
-                        movement_type: 'receipt',
-                        amount: amount,
-                        movement_date: new Date().toISOString().split('T')[0],
-                        description: desc,
-                        payment_id: payment.id
-                    });
-
-                    // Génération du reçu
-                    const { data: unit } = await sb.from('units').select('unit_number').eq('id', unitId).single();
-                    const { data: numData, error: numError } = await sb.rpc('generate_receipt_number');
-                    if (numError) {
-                        alert('Erreur numérotation : ' + numError.message);
-                        return;
-                    }
-                    const { data: receipt, error: recError } = await sb.from('receipts').insert({
-                        payment_id: payment.id,
-                        receipt_number: numData,
-                        unit_id: unitId,
-                        owner_name: unit?.unit_number || '',
-                        amount: amount,
-                        payment_reason: 'cotisation',
-                        period_year: year,
-                        period_month: selectedMonth,
-                        status: 'valid'
-                    }).select().single();
-                    if (recError) {
-                        alert('Erreur reçu : ' + recError.message);
-                    } else {
-                        generatePDF(receipt, unit?.unit_number);
-                    }
-                } else {
-                    const { data: expense, error } = await sb.from('expenses').insert({
-                        building_id: 'a1111111-1111-1111-1111-111111111111',
-                        description: desc,
-                        amount: amount,
-                        expense_date: new Date().toISOString().split('T')[0],
-                        status: 'paid'
-                    }).select().single();
-                    if (error) throw error;
-                    await sb.from('treasury_movements').insert({
-                        building_id: 'a1111111-1111-1111-1111-111111111111',
-                        movement_type: 'expense',
-                        amount: -amount,
-                        movement_date: new Date().toISOString().split('T')[0],
-                        description: desc,
-                        expense_id: expense.id
-                    });
-                }
-                alert('Enregistré avec succès');
-                loadSection('dashboard');
-            } catch (err) {
-                alert('Erreur : ' + err.message);
-            }
-        }
-
-        function generatePDF(receipt, ownerName) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.setTextColor(46, 125, 50);
-            doc.text('Immeuble Syndic', 105, 20, { align: 'center' });
-            doc.setFontSize(14);
-            doc.setTextColor(0);
-            doc.text('REÇU DE PAIEMENT', 105, 32, { align: 'center' });
-            doc.setFontSize(11);
-            doc.text(`N° ${receipt.receipt_number}`, 20, 50);
-            doc.text(`Propriétaire : ${ownerName || receipt.owner_name}`, 20, 60);
-            doc.text(`Montant : ${receipt.amount} MAD`, 20, 70);
-            doc.text(`Motif : ${receipt.payment_reason}`, 20, 80);
-            doc.text(`Période : ${receipt.period_month}/${receipt.period_year}`, 20, 90);
-            doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, 20, 100);
-            doc.text('Statut : VALIDE', 20, 110);
-            doc.setFontSize(9);
-            doc.text('Signature du syndic : _________________', 20, 140);
-            // QR Code
-            const qrDiv = document.createElement('div');
-            new QRCode(qrDiv, { text: `https://glowing-travesseiro-8a4ef9.netlify.app/verification/${receipt.verification_token}`, width: 80, height: 80 });
-            setTimeout(() => {
-                const canvas = qrDiv.querySelector('canvas');
-                if (canvas) doc.addImage(canvas.toDataURL(), 'PNG', 140, 50, 50, 50);
-                doc.save(`Recu_${receipt.receipt_number}.pdf`);
-            }, 500);
-        }
-
-        loadSection('dashboard');
-    </script>
+/* ---------- actions ---------- */
+let busy=false;
+async function guarded(fn){if(busy)return;busy=true;try{await fn()}catch(e){flash(e.message,false)}finally{busy=false}}
+const after={
+dues(){
+  let rid=uuid();// idempotence: même clé tant que le formulaire n'a pas réussi
+  $('#paysave').onclick=()=>guarded(async()=>{
+    const amount=parseFloat($('#pa').value);if(!(amount>0))throw new Error('Montant invalide');
+    const r=await rpc('record_payment',{p_unit_id:$('#pu').value,p_amount:amount,p_payment_date:$('#pd').value,p_method:$('#pm').value,p_request_id:rid});
+    rid=uuid();flash(r.duplicate?'Déjà enregistré':`${t('saved')} – ${r.receipt_number||''}`,true);
+    if(r.receipt_id&&!r.duplicate){S.tab='dues';await makePdf(r.receipt_id)}
+  });
+  $('#gen').onclick=()=>guarded(async()=>{const d=new Date();const n=await rpc('generate_dues',{p_year:d.getFullYear(),p_month:d.getMonth()+1});flash(`${n} ${t('dues')}`,true)});
+},
+exp(){
+  let rid=uuid();
+  $('#expsave').onclick=()=>guarded(async()=>{
+    const amount=parseFloat($('#ea').value);
+    await rpc('record_expense',{p_description:$('#ed').value.trim(),p_amount:amount,p_expense_date:$('#edt').value,p_category_id:$('#ec').value||null,p_status:$('#es').value,p_supplier:$('#esu').value.trim()||null,p_request_id:rid});
+    rid=uuid();flash(t('saved'),true)});
+  document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>guarded(async()=>{
+    const why=prompt(t('reason'));if(!why)return;await rpc('cancel_expense',{p_expense_id:b.dataset.cx,p_reason:why});flash(t('saved'),true)}));
+  document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>guarded(async()=>{
+    await rpc('pay_expense',{p_expense_id:b.dataset.pay,p_date:today(),p_method:'cash'});flash(t('saved'),true)}));
+},
+treas(){$('#csv').onclick=()=>csv('journal.csv',[['date','description','type','amount','solde'],...S.journal.map(r=>[r.movement_date,r.description,r.movement_type,r.amount,r.running_balance])])},
+more(){
+  document.querySelectorAll('[data-pdf]').forEach(b=>b.onclick=()=>guarded(()=>makePdf(b.dataset.pdf)));
+  document.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>{const r=S.receipts.find(x=>x.id===b.dataset.wa);
+    const txt=`Reçu ${r.receipt_number} – ${r.owner_name} – ${money(r.amount)} (${r.payment_date})\n${verifyUrl(r.verification_token)}`;
+    window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')});
+  $('#rep').onclick=()=>guarded(async()=>{const d=await q(sb.from('v_annual_financial_summary').select('*'));
+    if(!d.length)throw new Error(t('none'));csv('rapport_annuel.csv',[Object.keys(d[0]),...d.map(r=>Object.values(r))])});
+}};
+function csv(name,rows){
+  const body='﻿'+rows.map(r=>r.map(c=>{let s=String(c??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}).join(';')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+const verifyUrl=tok=>location.origin+location.pathname+'#/verify/'+encodeURIComponent(tok);
+async function makePdf(receiptId){
+  const r=(await q(sb.from('receipts').select('*').eq('id',receiptId).limit(1)))[0];
+  if(!r)throw new Error('Reçu introuvable');
+  const bld=(await q(sb.from('buildings').select('name').limit(1)))[0];
+  const qrBox=document.createElement('div');new QRCode(qrBox,{text:verifyUrl(r.verification_token),width:160,height:160});
+  await new Promise(res=>setTimeout(res,150));
+  const img=qrBox.querySelector('canvas')?.toDataURL('image/png');
+  const {jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a5'});
+  d.setFontSize(16);d.text('REÇU DE PAIEMENT',105,18,{align:'center'});
+  d.setFontSize(10);d.text(bld?.name||'',105,25,{align:'center'});
+  d.setFontSize(11);let y=40;
+  [['N°',r.receipt_number],['Date',r.payment_date],['Reçu de',r.owner_name],['Montant',money(r.amount)],['En lettres',r.amount_in_words||''],['Motif',(r.payment_reason||'')+(r.period_label?' ('+r.period_label+')':'')],['Mode',r.payment_method],['Reste dû',money(r.remaining_balance)]]
+   .forEach(([k,v])=>{d.setFont(undefined,'bold');d.text(k+' :',15,y);d.setFont(undefined,'normal');d.text(d.splitTextToSize(String(v),90),50,y);y+=(String(v).length>45?14:9)});
+  if(img)d.addImage(img,'PNG',100,y-2,36,36);
+  d.setFontSize(8);d.text('Scannez pour vérifier l\'authenticité',118,y+40,{align:'center'});
+  const blob=d.output('blob');const file=new File([blob],`recu-${r.receipt_number}.pdf`,{type:'application/pdf'});
+  if(window.Bridge&&Bridge.saveFile){const rd=new FileReader();rd.onload=()=>Bridge.saveFile(file.name,rd.result.split(',')[1],'application/pdf');rd.readAsDataURL(blob);return}
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:file.name});return}catch(e){if(e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;a.click();
+}
+window.addEventListener('hashchange',boot);
+boot();
+</script>
 </body>
 </html>
