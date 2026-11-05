@@ -148,6 +148,10 @@ async exp(){
   const rows=await q(sb.from('expenses').select('id,description,amount,expense_date,status,supplier,category_id,deleted_at').is('deleted_at',null).order('expense_date',{ascending:false}).limit(200));
   const cn=Object.fromEntries(S.cats.map(c=>[c.id,c.name]));
   return `<div class="card"><h2>${t('newexp')}</h2>
+  <div class="card" style="background:var(--bg)"><b>Importer une facture (OCR)</b>
+  <input id="ocrf" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="margin-top:8px">
+  <button class="btn sec" id="ocrgo" type="button">Analyser la facture</button>
+  <div id="ocrres"></div></div>
   <label>${t('desc')}</label><input id="ed" maxlength="200">
   <label>${t('amount')}</label><input id="ea" type="number" inputmode="decimal" min="0.01" step="0.01">
   <label>${t('cat')}</label><select id="ec"><option value="">—</option>${S.cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select>
@@ -189,10 +193,32 @@ dues(){
 },
 exp(){
   let rid=uuid();
-  $('#expsave').onclick=()=>guarded(async()=>{
+  S.ocrFile=null;
+  async function saveExpense(){
     const amount=parseFloat($('#ea').value);
-    await rpc('record_expense',{p_description:$('#ed').value.trim(),p_amount:amount,p_expense_date:$('#edt').value,p_category_id:$('#ec').value||null,p_status:$('#es').value,p_supplier:$('#esu').value.trim()||null,p_request_id:rid});
-    rid=uuid();flash(t('saved'),true)});
+    const r=await rpc('record_expense',{p_description:$('#ed').value.trim(),p_amount:amount,p_expense_date:$('#edt').value,p_category_id:$('#ec').value||null,p_status:$('#es').value,p_supplier:$('#esu').value.trim()||null,p_request_id:rid});
+    if(S.ocrFile&&r.expense_id&&!r.duplicate){await attachFile(r.expense_id,S.ocrFile)}
+    rid=uuid();S.ocrFile=null;flash(t('saved'),true)}
+  $('#expsave').onclick=()=>guarded(saveExpense);
+  $('#ocrgo').onclick=()=>guarded(async()=>{
+    const f=$('#ocrf').files[0];if(!f)throw new Error('Choisissez d\'abord un fichier (PDF, JPG ou PNG).');
+    if(f.size>10485760)throw new Error('Fichier trop lourd (10 Mo max)');
+    const out=$('#ocrres');out.innerHTML='<div class="msg">Analyse en cours… (peut prendre jusqu\'à une minute)</div>';
+    let text;try{text=await ocrText(f)}catch(e){out.innerHTML='<div class="msg err">Lecture OCR impossible : '+esc(e.message)+'</div>';return}
+    const res=parseInvoice(text);
+    if(!res.type){out.innerHTML='<div class="msg err">Numéro de police non reconnu. Vérification manuelle nécessaire.</div>';return}
+    if(res.amount==null){out.innerHTML=`<div class="msg err">Montant net à payer non détecté. Veuillez saisir le montant manuellement.</div>`;
+      pickCat(res.type);S.ocrFile=f;return}
+    pickCat(res.type);S.ocrFile=f;
+    $('#ea').value=res.amount.toFixed(2);
+    if(!$('#ed').value.trim())$('#ed').value='Facture '+(res.type==='EAU'?'eau':'électricité')+' – police '+res.police;
+    out.innerHTML=`<div class="msg ok"><b>${esc(res.type)}</b> – police ${esc(res.police)}<br>Montant net à payer TTC détecté : <b>${money(res.amount)}</b>
+      ${res.others.length?`<br><small>Autres montants lus sur la ligne : ${res.others.map(x=>esc(num(x))).join(', ')}</small>`:''}
+      <br><small>Vérifiez avec la facture. Rien n'est enregistré tant que vous ne confirmez pas.</small></div>
+      <div class="row"><button class="btn" id="ocrok" type="button">Confirmer et enregistrer</button><button class="btn sec" id="ocrno" type="button">Annuler / modifier</button></div>`;
+    $('#ocrok').onclick=()=>guarded(saveExpense);
+    $('#ocrno').onclick=()=>{S.ocrFile=null;$('#ea').value='';$('#ocrf').value='';out.innerHTML=''};
+  });
   document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>guarded(async()=>{
     const why=prompt(t('reason'));if(!why)return;await rpc('cancel_expense',{p_expense_id:b.dataset.cx,p_reason:why});flash(t('saved'),true)}));
   document.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{
@@ -241,6 +267,57 @@ async function makePdf(receiptId){
   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:file.name});return}catch(e){if(e.name==='AbortError')return}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;a.click();
 }
+
+/* ---------- OCR factures eau / électricité (navigateur, aucune clé API) ---------- */
+const POLICES={'0158226':'EAU','0637128':'ELECTRICITE'};
+function pickCat(type){const want=type==='EAU'?'eau':'electricite';
+  const norm=x=>x.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  const c=S.cats.find(c=>norm(c.name)===want);if(c)$('#ec').value=c.id}
+function loadScript(src){return new Promise((ok,ko)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>ko(new Error('Chargement impossible (connexion ?)'));document.head.appendChild(e)})}
+async function ocrImage(src){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js');
+  const r=await Tesseract.recognize(src,'fra');return r.data.text}
+async function ocrText(file){
+  if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;let all='';
+    for(let i=1;i<=Math.min(pdf.numPages,4);i++){
+      const pg=await pdf.getPage(i);const tc=await pg.getTextContent();
+      let txt='',lastY=null;for(const it of tc.items){if(lastY!==null&&Math.abs(it.transform[5]-lastY)>2)txt+='\n';else if(txt)txt+=' ';txt+=it.str;lastY=it.transform[5]}
+      if(txt.replace(/\s/g,'').length<40){const vp=pg.getViewport({scale:2.5});const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+        await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;txt=await ocrImage(cv)}
+      all+='\n'+txt}
+    return all}
+  return ocrImage(file)}
+function parseAmounts(line){const out=[];const re=/\d{1,3}(?:[  .]\d{3})*[.,]\d{2}(?!\d)|\d+[.,]\d{2}(?!\d)/g;let m;
+  while((m=re.exec(line))){let x=m[0].replace(/[\s ]/g,'');
+    if(/,\d{2}$/.test(x))x=x.replace(/\./g,'').replace(',','.');else x=x.replace(/,/g,'');
+    const v=parseFloat(x);if(isFinite(v)&&v>0)out.push(v)}return out}
+function parseInvoice(text){
+  const flat=text.replace(/[\s.\-]/g,'');
+  const found=Object.keys(POLICES).filter(p=>flat.includes(p));
+  if(found.length!==1)return {type:null};
+  const police=found[0],type=POLICES[police];
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const bad=/ancien|solde|report|arri[eé]r|d[eé]j[àa]\s*pay/i;
+  const pass=[/net\s*[àa]\s*payer|total\s*[àa]\s*payer|montant\s*[àa]\s*payer/i,/total\s*ttc|montant\s*ttc|net\s*ttc|\bttc\b/i];
+  for(const re of pass){
+    const cands=[];
+    lines.forEach((l,i)=>{if(!re.test(l)||bad.test(l))return;
+      if(/\bHT\b/i.test(l)&&!/ttc/i.test(l))return;
+      let a=parseAmounts(l);if(!a.length&&lines[i+1]&&!bad.test(lines[i+1]))a=parseAmounts(lines[i+1]);
+      if(a.length)cands.push(a)});
+    if(cands.length){const last=cands[cands.length-1];const amount=last[last.length-1];
+      return {type,police,amount,others:last.slice(0,-1)}}
+  }
+  return {type,police,amount:null,others:[]}}
+async function attachFile(expenseId,f){
+  const ext=(f.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').slice(0,5);
+  const path=`expenses/${expenseId}/${uuid()}.${ext}`;
+  const up=await sb.storage.from('syndic-documents').upload(path,f,{contentType:f.type||'application/octet-stream'});
+  if(up.error)throw new Error('Dépense enregistrée, mais justificatif non envoyé : '+up.error.message);
+  const bid=(await q(sb.from('buildings').select('id').limit(1)))[0].id;
+  await q(sb.from('attachments').insert({building_id:bid,storage_path:path,file_name:f.name.slice(0,120),mime_type:f.type,file_size:f.size,expense_id:expenseId}))}
 window.addEventListener('hashchange',boot);
 boot();
 </script>
