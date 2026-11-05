@@ -156,7 +156,7 @@ async exp(){
   <label>${t('supplier')}</label><input id="esu" maxlength="120">
   <button class="btn" id="expsave">${t('save')}</button></div>
   <div class="card"><h2>${t('exp')}</h2><div class="scroll"><table><tr><th>${t('date')}</th><th>${t('desc')}</th><th>${t('cat')}</th><th class="n">${t('amount')}</th><th></th></tr>
-  ${rows.map(r=>`<tr><td>${esc(r.expense_date)}</td><td>${esc(r.description)}</td><td>${esc(cn[r.category_id]||'')}</td><td class="n">${num(r.amount)}</td><td>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button> `:''}<button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></td></tr>`).join('')||`<tr><td colspan=5>${t('none')}</td></tr>`}</table></div></div>`;
+  ${rows.map(r=>`<tr><td>${esc(r.expense_date)}</td><td>${esc(r.description)}</td><td>${esc(cn[r.category_id]||'')}</td><td class="n">${num(r.amount)}</td><td>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button> `:''}<button class="btn sm sec" data-att="${esc(r.id)}">📎</button> <button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></td></tr>`).join('')||`<tr><td colspan=5>${t('none')}</td></tr>`}</table></div></div>`;
 },
 async treas(){
   const rows=await q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(300));
@@ -195,6 +195,15 @@ exp(){
     rid=uuid();flash(t('saved'),true)});
   document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>guarded(async()=>{
     const why=prompt(t('reason'));if(!why)return;await rpc('cancel_expense',{p_expense_id:b.dataset.cx,p_reason:why});flash(t('saved'),true)}));
+  document.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{
+    const inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';
+    inp.onchange=()=>guarded(async()=>{const f=inp.files[0];if(!f)return;if(f.size>10485760)throw new Error('Fichier trop lourd (10 Mo max)');
+      const ext=(f.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').slice(0,5);
+      const path=`expenses/${b.dataset.att}/${uuid()}.${ext}`;
+      const up=await sb.storage.from('syndic-documents').upload(path,f,{contentType:f.type});if(up.error)throw new Error(up.error.message);
+      const bid=(await q(sb.from('buildings').select('id').limit(1)))[0].id;
+      await q(sb.from('attachments').insert({building_id:bid,storage_path:path,file_name:f.name.slice(0,120),mime_type:f.type,file_size:f.size,expense_id:b.dataset.att}));
+      flash(t('saved'),true)});inp.click()});
   document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>guarded(async()=>{
     await rpc('pay_expense',{p_expense_id:b.dataset.pay,p_date:today(),p_method:'cash'});flash(t('saved'),true)}));
 },
