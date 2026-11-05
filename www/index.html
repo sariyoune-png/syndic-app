@@ -246,7 +246,9 @@ function csv(name,rows){
   const body='﻿'+rows.map(r=>r.map(c=>{let s=String(c??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}).join(';')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
-const verifyUrl=tok=>location.origin+location.pathname+'#/verify/'+encodeURIComponent(tok);
+const PUBLIC_URL='https://dreamy-cobbler-73fcd2.netlify.app/';
+const verifyUrl=tok=>{const web=/^https?:$/.test(location.protocol)&&!/localhost|appassets/.test(location.hostname);
+  return (web?location.origin+location.pathname:PUBLIC_URL)+'#/verify/'+encodeURIComponent(tok)};
 async function makePdf(receiptId){
   const r=(await q(sb.from('receipts').select('*').eq('id',receiptId).limit(1)))[0];
   if(!r)throw new Error('Reçu introuvable');
