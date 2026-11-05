@@ -38,6 +38,7 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const SB_URL='https://nactxqbnqcdbklddmraa.supabase.co', SB_KEY='sb_publishable_vuD8aWG-MEhraGtGPFp2tg_YrSiL1NX';
+if(typeof supabase==='undefined'){document.getElementById('app').innerHTML='<div style="padding:12vh 24px;text-align:center"><h2>Internet requis</h2><p>Les données sont dans Supabase. Activez Internet puis rouvrez l\'application.</p></div>';throw new Error('offline')}
 const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 const T={fr:{app:'Syndic',login:'Connexion',email:'E-mail',pwd:'Mot de passe',signin:'Se connecter',logout:'Quitter',dash:'Accueil',dues:'Cotisations',exp:'Dépenses',treas:'Trésorerie',more:'Plus',
 cash:'Trésorerie réelle',pending:'Dépenses à payer',after:'Après dettes',arrears:'Impayés',collected:'Cotisations encaissées',expected:'Cotisations attendues',flows:'Flux mensuels (12 mois)',in:'Entrées',out:'Sorties',
