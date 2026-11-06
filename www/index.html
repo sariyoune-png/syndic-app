@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v6 – Gestion de copropriété</title>
+<title>Syndic v7 – Gestion de copropriété</title>
 <style>
 :root{--bg:#f1f4f8;--card:#fff;--tx:#17212b;--mu:#667386;--pr:#0b6b4f;--prd:#08503b;--rd:#c0392b;--or:#d98a00;--bd:#e1e6ed;--ok:#1f9d6b;--pa:#f0a92e;--pe:#e0594b}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#18202a;--tx:#e8edf3;--mu:#98a3b3;--pr:#2fb386;--prd:#1f8c68;--rd:#ef6a5b;--or:#f0b13b;--bd:#27313d;--ok:#2fb386;--pa:#f0b13b;--pe:#ef6a5b}}
@@ -157,8 +157,8 @@ async dash(){
   const mx=Math.max(1,...f.map(x=>Math.max(+x.inflows,+x.outflows)));
   const bars=f.map(x=>`<div class="col"><div class="pair"><i class="a" style="height:${+x.inflows/mx*100}%"></i><i class="b" style="height:${+x.outflows/mx*100}%"></i></div><em>${esc(String(x.month).slice(5,7))}</em></div>`).join('');
   return `<div class="grid2">
-  <div class="tile kpi"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
-  <div class="tile kpi"><small>${t('after')}</small><b>${money(k.balance_after_debts)}</b></div>
+  <div class="tile kpi"><small>Solde en caisse</small><b class="${+k.balance_after_debts<0?'neg':'pos'}">${money(k.balance_after_debts)}</b></div>
+  <div class="tile kpi"><small>Espèces disponibles</small><b>${money(k.cash_balance)}</b></div>
   <div class="tile kpi"><small>${t('pending')}</small><b class="warn">${money(k.pending_expenses)}</b></div>
   <div class="tile kpi"><small>${t('arrears')}</small><b class="neg">${money(k.dues_arrears)}</b></div></div>
   <div class="tile fill"><div class="ttl">${t('flows')} <span style="color:var(--ok)">■ ${t('in')}</span><span style="color:var(--pe)">■ ${t('out')}</span></div>${f.length?`<div class="bars">${bars}</div>`:t('none')}</div>
@@ -192,8 +192,8 @@ async exp(){
 async treas(){
   const [rows,c,rt]=await Promise.all([load('journal',()=>q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(400))),load('cash',()=>q(sb.from('v_cash_summary').select('*').limit(1))),load('rt',()=>q(sb.from('v_report_totals').select('*').limit(1)))]);
   S.journal=rows;const k=c[0]||{};const R=rt[0]||{};const pg=pageOf('treas',rows,5);
-  return `<div class="tile kpi big"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
-  <div class="grid2"><div class="tile kpi"><small>Encaissements</small><b class="pos">${money(R.total_receipts)}</b></div><div class="tile kpi"><small>Dépenses payées</small><b class="neg">${money(R.paid_expenses)}</b></div></div>
+  return `<div class="tile kpi big"><small>Solde en caisse (encaissements − dépenses)</small><b class="${+k.balance_after_debts<0?'neg':'pos'}">${money(k.balance_after_debts)}</b><small>Espèces disponibles ${money(k.cash_balance)} · à payer ${money(k.pending_expenses)}</small></div>
+  <div class="grid2"><div class="tile kpi"><small>Total encaissements</small><b class="pos">${money(R.total_receipts)}</b></div><div class="tile kpi"><small>Total dépenses</small><b class="neg">${money(R.total_expenses)}</b></div></div>
   <div class="tile fill"><div class="ttl">${t('journal')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}${r.movement_type==='cancellation'?' ↩':''}</b><small>${esc(r.movement_date)} · ${t('balance')} ${num(r.running_balance)}</small></div><span class="am ${+r.amount<0?'neg':'pos'}">${num(r.amount)}</span></div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('treas',pg)}</div>
   <div class="acts"><button class="btn sec" id="csv">${t('export')}</button><button class="btn sec" onclick="print()">${t('print')}</button></div>`;
 },
