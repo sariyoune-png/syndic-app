@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v8 – Gestion de copropriété</title>
+<title>Syndic v9 – Gestion de copropriété</title>
 <style>
 :root{--bg:#f1f4f8;--card:#fff;--tx:#17212b;--mu:#667386;--pr:#0b6b4f;--prd:#08503b;--rd:#c0392b;--or:#d98a00;--bd:#e1e6ed;--ok:#1f9d6b;--pa:#f0a92e;--pe:#e0594b}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#18202a;--tx:#e8edf3;--mu:#98a3b3;--pr:#2fb386;--prd:#1f8c68;--rd:#ef6a5b;--or:#f0b13b;--bd:#27313d;--ok:#2fb386;--pa:#f0b13b;--pe:#ef6a5b}}
@@ -15,7 +15,10 @@ header{flex:none;height:46px;background:var(--pr);color:#fff;padding:0 12px;disp
 header h1{font-size:16px;margin:0;flex:1}header button{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:12px}
 main{flex:1;min-height:0;width:100%;max-width:640px;margin:0 auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
 nav{flex:none;height:calc(54px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--card);border-top:1px solid var(--bd);display:flex}
-nav a{flex:1;text-align:center;padding-top:7px;font-size:10.5px;color:var(--mu);text-decoration:none}nav a.on{color:var(--pr);font-weight:700}nav a span{display:block;font-size:18px;line-height:1.1}
+nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:6px;font-size:10.5px;color:var(--mu);text-decoration:none;font-weight:500;letter-spacing:.1px}
+nav a .ic{display:flex;align-items:center;justify-content:center;width:54px;height:28px;border-radius:14px;transition:background .15s}
+nav a.on{color:var(--pr);font-weight:700}nav a.on .ic{background:color-mix(in srgb,var(--pr) 14%,transparent)}
+.btn.sm svg{display:block}.btn.sm.ib{padding:6px 8px;line-height:0}
 .tile{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px 11px;min-width:0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:none}
 .kpi small{display:block;color:var(--mu);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kpi b{display:block;font-size:clamp(15px,5vw,21px);white-space:nowrap}
@@ -130,10 +133,19 @@ async function renderVerify(token){
     $('#vr').innerHTML=`<div class="msg ${cls}"><b>${esc(txt)}</b></div>`+(r.receipt_number?`<p>N° ${esc(r.receipt_number)}<br>${esc(r.unit)} – ${esc(r.building)}<br>${money(r.amount)} – ${esc(r.payment_date)}</p>`:'');
   }catch(e){$('#vr').innerHTML=`<div class="msg err">${esc(e.message)}</div>`}
 }
+const IC={
+ home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
+ dues:'<rect x="3.5" y="5" width="17" height="15" rx="2.2"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m9 15 2 2 4-4"/>',
+ exp:'<path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12.5h6"/>',
+ treas:'<path d="M3 9.5 12 4l9 5.5"/><path d="M5.5 10.5v7M9.5 10.5v7M14.5 10.5v7M18.5 10.5v7"/><path d="M3.5 20h17"/>',
+ more:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+ clip:'<path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4L14 7.5"/>',
+ x:'<path d="M6 6l12 12M18 6 6 18"/>'};
+const ico=(k,sz)=>`<svg viewBox="0 0 24 24" width="${sz||22}" height="${sz||22}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
 function shell(body){
-  const tabs=[['dash','🏠',t('dash')],['dues','📅',t('dues')],['exp','🧾',t('exp')],['treas','💰',t('treas')],['more','☰',t('more')]];
+  const tabs=[['dash','home',t('dash')],['dues','dues',t('dues')],['exp','exp',t('exp')],['treas','treas',t('treas')],['more','more',t('more')]];
   $('#app').innerHTML=`<header><h1>${t('app')}</h1><button onclick="setLang(lang==='fr'?'ar':'fr')">${t('lang')}</button><button onclick="sb.auth.signOut().then(boot)">${t('logout')}</button></header>
-  <main>${body}</main><nav>${tabs.map(([k,i,l])=>`<a href="#" class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render();return false"><span>${i}</span>${l}</a>`).join('')}</nav>`;
+  <main>${body}</main><nav>${tabs.map(([k,i,l])=>`<a href="#" class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render();return false"><span class="ic">${ico(i)}</span>${l}</a>`).join('')}</nav>`;
 }
 S.cache={};S.useCache=false;S.page={};
 async function load(key,fn){if(S.useCache&&S.cache[key])return S.cache[key];return S.cache[key]=await fn()}
@@ -186,7 +198,7 @@ async exp(){
   const pg=pageOf('exp',rows,4);
   return `<div class="grid2"><div class="tile kpi"><small>Total ${t('exp').toLowerCase()}</small><b>${money(T0.total_expenses)}</b></div><div class="tile kpi"><small>${t('pending')}</small><b class="warn">${money(T0.pending_expenses)}</b></div></div>
   <div class="tile fill"><div class="ttl">${t('cat')}</div><div class="cats">${cats.map(([n,v])=>`<div class="cat"><span>${esc(n)}</span><div class="pb"><i style="width:${v/mx*100}%"></i></div><b>${num(v)}</b></div>`).join('')||t('none')}</div></div>
-  <div class="tile list">${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}</b><small>${esc(r.expense_date)}${r.status==='pending'?' · '+t('pendexp'):''}</small></div><span class="am">${num(r.amount)}</span>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button>`:''}<button class="btn sm sec" data-att="${esc(r.id)}">📎</button><button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></div>`).join('')||`<div class="li">${t('none')}</div>`}${pager('exp',pg)}</div>
+  <div class="tile list">${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}</b><small>${esc(r.expense_date)}${r.status==='pending'?' · '+t('pendexp'):''}</small></div><span class="am">${num(r.amount)}</span>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button>`:''}<button class="btn sm sec ib" data-att="${esc(r.id)}" aria-label="Justificatif">${ico('clip',15)}</button><button class="btn sm dg ib" data-cx="${esc(r.id)}" aria-label="Annuler">${ico('x',15)}</button></div>`).join('')||`<div class="li">${t('none')}</div>`}${pager('exp',pg)}</div>
   <div class="acts"><button class="btn" id="newexp">+ ${t('newexp')}</button></div>`;
 },
 async treas(){
@@ -200,7 +212,7 @@ async treas(){
 async more(){
   const rc=await load('rc',()=>q(sb.from('receipts').select('id,payment_id,receipt_number,owner_name,amount,payment_date,status,verification_token,amount_in_words,period_label,payment_method,remaining_balance').order('created_at',{ascending:false}).limit(200)));
   S.receipts=rc;const pg=pageOf('more',rc,4);
-  return `<div class="tile fill"><div class="ttl">${t('receipts')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.receipt_number)}${r.status!=='valid'?' ✕':''}</b><small>${esc(r.owner_name)} · ${esc(r.payment_date)}</small></div><span class="am">${num(r.amount)}</span><button class="btn sm" data-pdf="${esc(r.id)}">PDF</button><button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button>${r.status==='valid'?`<button class="btn sm dg" data-cxp="${esc(r.payment_id)}">✕</button>`:''}</div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('more',pg)}</div>
+  return `<div class="tile fill"><div class="ttl">${t('receipts')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.receipt_number)}${r.status!=='valid'?' ✕':''}</b><small>${esc(r.owner_name)} · ${esc(r.payment_date)}</small></div><span class="am">${num(r.amount)}</span><button class="btn sm" data-pdf="${esc(r.id)}">PDF</button><button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button>${r.status==='valid'?`<button class="btn sm dg ib" data-cxp="${esc(r.payment_id)}" aria-label="Annuler le paiement">${ico('x',15)}</button>`:''}</div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('more',pg)}</div>
   <div class="acts"><button class="btn" id="repdf">${t('report')} (PDF)</button><button class="btn sec" id="rep">CSV</button></div>
   <div class="acts"><button class="btn sec" id="gen">${t('genDues')}</button></div>`;
 }};
