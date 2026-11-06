@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v14 – Gestion de copropriété</title>
+<title>Syndic v15 – Gestion de copropriété</title>
 <style>
 :root{--bg:#11151b;--card:#181e26;--tx:#f3f5f7;--mu:#a7b1bf;--pr:#d4f77d;--prd:#b8dc5f;--rd:#ff7a6b;--or:#f0b13b;--bd:#35404c;--ok:#d4f77d;--pa:#f0b13b;--pe:#ff7a6b;--on:#11151b;--olive:#52643d;--fd:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fm:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -305,7 +305,10 @@ async function waSheet(){
     sh.querySelector('#wa_test').onclick=()=>guarded(async()=>{
       const ph=prompt('Numéro WhatsApp qui recevra le message de test (ex. 212612345678) :');if(!ph)return;
       const {data,error}=await sb.functions.invoke('wa-reminders',{body:{action:'test',phone:ph}});
-      if(error||!data||data.ok===false)throw new Error((data&&(data.error||data.error?.message))||'Échec de l’envoi (modèle non validé ou identifiants incorrects)');
+      let b=data;if(error&&error.context&&error.context.json){try{b=await error.context.json()}catch(e){}}
+      if(error||!b||b.ok===false){let m=(b&&b.error)||(error&&error.message)||'Échec de l’envoi';
+        try{const j=JSON.parse(m);m=(j.message||'')+(j.code?' (code '+j.code+')':'')+(j.error_data&&j.error_data.details?' : '+j.error_data.details:'')}catch(e){}
+        throw new Error(String(m).slice(0,350))}
       toast('Message de test envoyé',true)});
   });
 }
