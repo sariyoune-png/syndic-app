@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v5 – Gestion de copropriété</title>
+<title>Syndic v6 – Gestion de copropriété</title>
 <style>
 :root{--bg:#f1f4f8;--card:#fff;--tx:#17212b;--mu:#667386;--pr:#0b6b4f;--prd:#08503b;--rd:#c0392b;--or:#d98a00;--bd:#e1e6ed;--ok:#1f9d6b;--pa:#f0a92e;--pe:#e0594b}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#18202a;--tx:#e8edf3;--mu:#98a3b3;--pr:#2fb386;--prd:#1f8c68;--rd:#ef6a5b;--or:#f0b13b;--bd:#27313d;--ok:#2fb386;--pa:#f0b13b;--pe:#ef6a5b}}
@@ -177,22 +177,23 @@ async dues(){
   <div class="acts"><button class="btn" id="newpay">+ ${t('newpay')}</button><button class="btn sec" id="gen">${t('genDues')}</button></div>`;
 },
 async exp(){
-  const rows=await load('exp',()=>q(sb.from('expenses').select('id,description,amount,expense_date,status,supplier,category_id').is('deleted_at',null).order('expense_date',{ascending:false}).limit(300)));
+  const [all,rt]=await Promise.all([load('exp',()=>q(sb.from('expenses').select('id,description,amount,expense_date,status,supplier,category_id,is_counted').is('deleted_at',null).order('expense_date',{ascending:false}).limit(300))),load('rt',()=>q(sb.from('v_report_totals').select('*').limit(1)))]);
+  const rows=all.filter(r=>r.status!=='cancelled'&&r.is_counted!==false);
+  const T0=rt[0]||{};
   const cn=Object.fromEntries(S.cats.map(c=>[c.id,c.name]));
   const tot={};rows.forEach(r=>{const n=cn[r.category_id]||'—';tot[n]=(tot[n]||0)+ +r.amount});
   const cats=Object.entries(tot).sort((a,b)=>b[1]-a[1]).slice(0,5);const mx=Math.max(1,...cats.map(c=>c[1]));
-  const all=rows.reduce((a,r)=>a+ +r.amount,0),pend=rows.filter(r=>r.status==='pending').reduce((a,r)=>a+ +r.amount,0);
   const pg=pageOf('exp',rows,4);
-  return `<div class="grid2"><div class="tile kpi"><small>${t('exp')}</small><b>${money(all)}</b></div><div class="tile kpi"><small>${t('pending')}</small><b class="warn">${money(pend)}</b></div></div>
+  return `<div class="grid2"><div class="tile kpi"><small>Total ${t('exp').toLowerCase()}</small><b>${money(T0.total_expenses)}</b></div><div class="tile kpi"><small>${t('pending')}</small><b class="warn">${money(T0.pending_expenses)}</b></div></div>
   <div class="tile fill"><div class="ttl">${t('cat')}</div><div class="cats">${cats.map(([n,v])=>`<div class="cat"><span>${esc(n)}</span><div class="pb"><i style="width:${v/mx*100}%"></i></div><b>${num(v)}</b></div>`).join('')||t('none')}</div></div>
   <div class="tile list">${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}</b><small>${esc(r.expense_date)}${r.status==='pending'?' · '+t('pendexp'):''}</small></div><span class="am">${num(r.amount)}</span>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button>`:''}<button class="btn sm sec" data-att="${esc(r.id)}">📎</button><button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></div>`).join('')||`<div class="li">${t('none')}</div>`}${pager('exp',pg)}</div>
   <div class="acts"><button class="btn" id="newexp">+ ${t('newexp')}</button></div>`;
 },
 async treas(){
-  const [rows,c]=await Promise.all([load('journal',()=>q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(400))),load('cash',()=>q(sb.from('v_cash_summary').select('*').limit(1)))]);
-  S.journal=rows;const k=c[0]||{};const pg=pageOf('treas',rows,5);
+  const [rows,c,rt]=await Promise.all([load('journal',()=>q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(400))),load('cash',()=>q(sb.from('v_cash_summary').select('*').limit(1))),load('rt',()=>q(sb.from('v_report_totals').select('*').limit(1)))]);
+  S.journal=rows;const k=c[0]||{};const R=rt[0]||{};const pg=pageOf('treas',rows,5);
   return `<div class="tile kpi big"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
-  <div class="grid2"><div class="tile kpi"><small>${t('in')}</small><b class="pos">${money(k.inflows)}</b></div><div class="tile kpi"><small>${t('out')}</small><b class="neg">${money(k.outflows)}</b></div></div>
+  <div class="grid2"><div class="tile kpi"><small>Encaissements</small><b class="pos">${money(R.total_receipts)}</b></div><div class="tile kpi"><small>Dépenses payées</small><b class="neg">${money(R.paid_expenses)}</b></div></div>
   <div class="tile fill"><div class="ttl">${t('journal')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}${r.movement_type==='cancellation'?' ↩':''}</b><small>${esc(r.movement_date)} · ${t('balance')} ${num(r.running_balance)}</small></div><span class="am ${+r.amount<0?'neg':'pos'}">${num(r.amount)}</span></div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('treas',pg)}</div>
   <div class="acts"><button class="btn sec" id="csv">${t('export')}</button><button class="btn sec" onclick="print()">${t('print')}</button></div>`;
 },
