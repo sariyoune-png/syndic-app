@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v13 – Gestion de copropriété</title>
+<title>Syndic v14 – Gestion de copropriété</title>
 <style>
 :root{--bg:#11151b;--card:#181e26;--tx:#f3f5f7;--mu:#a7b1bf;--pr:#d4f77d;--prd:#b8dc5f;--rd:#ff7a6b;--or:#f0b13b;--bd:#35404c;--ok:#d4f77d;--pa:#f0b13b;--pe:#ff7a6b;--on:#11151b;--olive:#52643d;--fd:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fm:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -260,17 +260,19 @@ async function waSheet(){
     rpc('wa_credentials_status'),
     q(sb.from('whatsapp_reminder_logs').select('resident_name,billing_month,billing_year,amount_due,status,delivery_status,sent_at,reminder_date,error').order('created_at',{ascending:false}).limit(8))]);
   const ready=cred.token&&cred.phone_id;
-  const badge=r=>!st.enabled||!r.enabled?['Désactivé','var(--mu)']:r.last_failed_today?['Échec','var(--or)']:+r.outstanding>0?['Impayé · relances actives','var(--rd)']:['Payé · relances arrêtées','var(--ok)'];
+  const badge=r=>!st.enabled||!r.enabled?['Désactivé','var(--mu)']:r.unreachable?['Injoignable · blocage possible','var(--or)']:r.last_failed_today?['Échec','var(--or)']:+r.outstanding>0?['Impayé · relances actives','var(--rd)']:['Payé · relances arrêtées','var(--ok)'];
   const MO=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
   const next=(r)=>st.enabled&&r.enabled&&+r.outstanding>0?(new Date().getHours()<st.daily_reminder_hour?'aujourd’hui':'demain')+' '+String(st.daily_reminder_hour).padStart(2,'0')+'h':'—';
   openSheet(`<h2>Relances WhatsApp automatiques</h2>
   <label class="row" style="margin:6px 0"><span style="flex:1;font-weight:600">Automatisation globale</span><input type="checkbox" id="wa_on" style="width:auto" ${st.enabled?'checked':''}></label>
   <div class="row" style="margin:4px 0"><span style="flex:none;padding:3px 10px;border-radius:99px;font:700 11px var(--fm);background:${st.mode==='production'?'var(--pr)':'var(--or)'};color:var(--on)">${st.mode==='production'?'MODE PRODUCTION':'MODE TEST'}</span><button class="btn sm sec" id="wa_mode" style="flex:none">${st.mode==='production'?'Repasser en TEST':'Passer en PRODUCTION'}</button></div>
   ${st.mode!=='production'?'<small style="color:var(--mu)">En mode TEST, aucun rappel automatique n’est envoyé : seul le bouton « Envoyer un test » fonctionne.</small><br>':''}
+  ${rows.some(r=>r.enabled&&r.unreachable)?`<div class="msg err" style="margin:6px 0">⚠ Injoignable : ${rows.filter(r=>r.enabled&&r.unreachable).map(r=>esc(r.unit_number)).join(', ')}. Le numéro est peut-être bloqué ou invalide.</div>`:''}
   <small style="color:var(--${ready?'ok':'or'})">${ready?'API WhatsApp configurée':'API non configurée : renseignez les identifiants ci-dessous'}</small>
   ${rows.map(r=>{const b=badge(r);return `<div class="tile" style="margin-top:8px;border-color:${b[1]}">
     <div class="row"><b style="flex:1">${esc(r.unit_number)}</b><span style="color:${b[1]};font:700 11px var(--fm)">${b[0]}</span></div>
     <div class="row" style="margin-top:6px"><input data-ph="${r.unit_id}" value="${esc(r.phone_number||'')}" placeholder="+212…" inputmode="tel"><label style="margin:0;flex:none"><input type="checkbox" data-en="${r.unit_id}" style="width:auto" ${r.enabled?'checked':''}> actif</label></div>
+    ${r.unreachable&&r.enabled?`<small style="color:var(--or);display:block;margin:4px 0">⚠ ${esc(r.unreachable_reason)}. Prévenez ${esc(r.unit_number)} ou vérifiez son numéro.</small>`:''}
     <small style="color:var(--mu)">Dû ${money(r.outstanding)} · envoyés ${r.sent_count} · dernier ${r.last_sent_at?new Date(r.last_sent_at).toLocaleDateString('fr-FR'):'—'} · prochain ${next(r)}</small></div>`}).join('')}
   <div class="acts" style="margin-top:8px"><button class="btn" id="wa_save">Enregistrer</button></div>
   <details style="margin-top:10px"><summary style="color:var(--mu)">Configuration API WhatsApp (Meta)</summary>
