@@ -3,32 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v3 – Gestion de copropriété</title>
+<title>Syndic v4 – Gestion de copropriété</title>
 <style>
-:root{--bg:#f4f6f9;--card:#fff;--tx:#1b2430;--mu:#6b7686;--pr:#0b6b4f;--prd:#08503b;--rd:#c0392b;--or:#d98a00;--bd:#e2e7ee}
-@media (prefers-color-scheme:dark){:root{--bg:#10151b;--card:#1a212a;--tx:#e8edf3;--mu:#98a3b3;--pr:#2fb386;--prd:#1f8c68;--rd:#ef6a5b;--or:#f0b13b;--bd:#2a3340}}
-*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:72px}
-header{background:var(--pr);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5}
-header h1{font-size:17px;margin:0;flex:1}header button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:13px}
-main{max-width:900px;margin:0 auto;padding:14px 16px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.kpi small{color:var(--mu);display:block}.kpi b{font-size:21px}.neg{color:var(--rd)}.pos{color:var(--pr)}.warn{color:var(--or)}
-h2{font-size:16px;margin:4px 0 10px}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:start}th{color:var(--mu);font-weight:600;font-size:12px}
-td.n,th.n{text-align:end;font-variant-numeric:tabular-nums}.scroll{overflow-x:auto}
-nav{position:fixed;bottom:0;inset-inline:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
-nav a{flex:1;text-align:center;padding:9px 2px;font-size:11px;color:var(--mu);text-decoration:none}nav a.on{color:var(--pr);font-weight:700}nav a span{display:block;font-size:19px}
-label{display:block;font-size:13px;color:var(--mu);margin:8px 0 3px}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
-.btn{background:var(--pr);color:#fff;border:0;border-radius:9px;padding:11px 16px;font:inherit;font-weight:600;margin-top:12px}.btn.sec{background:transparent;color:var(--pr);border:1px solid var(--pr)}.btn.sm{padding:5px 9px;font-size:12px;margin:0}.btn.dg{background:var(--rd)}
-.btn:disabled{opacity:.5}
-.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:var(--bd)}.tag.paid{background:#d6f3e6;color:#075e3f}.tag.partial{background:#fdecc8;color:#7a4b00}.tag.pending{background:#fbd9d4;color:#8a1d12}.tag.cancelled{background:var(--bd);color:var(--mu)}
-.msg{padding:10px;border-radius:8px;margin:8px 0}.msg.err{background:#fbd9d4;color:#8a1d12}.msg.ok{background:#d6f3e6;color:#075e3f}
-#login{max-width:380px;margin:14vh auto;padding:0 16px}
-.bar{display:flex;align-items:flex-end;gap:6px;height:120px}.bar div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;height:100%;font-size:10px;color:var(--mu)}.bar i{display:block;width:100%;border-radius:3px 3px 0 0}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-@media print{header,nav,.noprint{display:none!important}}
+:root{--bg:#f1f4f8;--card:#fff;--tx:#17212b;--mu:#667386;--pr:#0b6b4f;--prd:#08503b;--rd:#c0392b;--or:#d98a00;--bd:#e1e6ed;--ok:#1f9d6b;--pa:#f0a92e;--pe:#e0594b}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#18202a;--tx:#e8edf3;--mu:#98a3b3;--pr:#2fb386;--prd:#1f8c68;--rd:#ef6a5b;--or:#f0b13b;--bd:#27313d;--ok:#2fb386;--pa:#f0b13b;--pe:#ef6a5b}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden}
+body{font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+#app{height:100dvh;display:flex;flex-direction:column}
+header{flex:none;height:46px;background:var(--pr);color:#fff;padding:0 12px;display:flex;align-items:center;gap:8px}
+header h1{font-size:16px;margin:0;flex:1}header button{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:12px}
+main{flex:1;min-height:0;width:100%;max-width:640px;margin:0 auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+nav{flex:none;height:calc(54px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--card);border-top:1px solid var(--bd);display:flex}
+nav a{flex:1;text-align:center;padding-top:7px;font-size:10.5px;color:var(--mu);text-decoration:none}nav a.on{color:var(--pr);font-weight:700}nav a span{display:block;font-size:18px;line-height:1.1}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px 11px;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:none}
+.kpi small{display:block;color:var(--mu);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kpi b{display:block;font-size:clamp(15px,5vw,21px);white-space:nowrap}
+.kpi.big b{font-size:clamp(24px,8vw,34px)}
+.neg{color:var(--rd)}.pos{color:var(--pr)}.warn{color:var(--or)}
+.fill{flex:1;min-height:0;display:flex;flex-direction:column}
+.ttl{font-size:12px;color:var(--mu);font-weight:600;margin-bottom:4px;display:flex;gap:10px;align-items:center}
+.bars{flex:1;min-height:60px;display:flex;gap:3px}
+.bars .col{flex:1;display:flex;flex-direction:column;min-width:0}.bars .pair{flex:1;position:relative}.bars .pair i{position:absolute;bottom:0;width:calc(50% - 1px);border-radius:3px 3px 0 0;min-height:1px}
+.bars .pair i.a{inset-inline-start:0;background:var(--ok)}.bars .pair i.b{inset-inline-end:0;background:var(--pe)}
+.bars em{font-style:normal;font-size:9px;color:var(--mu);text-align:center;margin-top:2px}
+.units{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none}
+.unit b{font-size:14px}.unit .pb{height:6px;background:var(--bd);border-radius:9px;overflow:hidden;margin:5px 0 3px}.unit .pb i{display:block;height:100%;background:var(--ok)}
+.unit small{color:var(--mu);font-size:11px}
+.tag{display:inline-block;padding:1px 7px;border-radius:99px;font-size:10.5px;background:#fbd9d4;color:#8a1d12;margin-inline-start:4px}
+.heat{flex:1;min-height:0;display:grid;grid-template-columns:62px repeat(12,1fr);grid-auto-rows:1fr;gap:3px;align-items:stretch}
+.heat .h{font-size:9.5px;color:var(--mu);text-align:center;align-self:end}.heat .u{font-size:12px;font-weight:600;display:flex;align-items:center;cursor:pointer;color:var(--pr)}
+.heat .c{border-radius:5px;background:var(--bd)}.heat .c.paid{background:var(--ok)}.heat .c.partial{background:var(--pa)}.heat .c.pending{background:var(--pe)}
+.legend{display:flex;gap:10px;font-size:10.5px;color:var(--mu);flex:none;flex-wrap:wrap}.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-inline-end:3px}
+.cats{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px;overflow:hidden;justify-content:space-around}
+.cat{display:grid;grid-template-columns:78px 1fr auto;gap:6px;align-items:center;font-size:12px}.cat .pb{height:9px;background:var(--bd);border-radius:9px;overflow:hidden}.cat .pb i{display:block;height:100%;background:var(--pr)}
+.li{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12.5px;min-height:38px}.li:last-child{border:0}
+.li .d{flex:1;min-width:0}.li .d b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.li .d small{color:var(--mu);font-size:11px}.li .am{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.list{flex:none}
+.pager{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mu);padding-top:4px}.pager button{background:var(--bg);border:1px solid var(--bd);color:var(--tx);border-radius:8px;width:38px;height:28px;font-size:15px}.pager button:disabled{opacity:.35}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:11px;padding:11px 14px;font:inherit;font-weight:600;flex:1}.btn.sec{background:transparent;color:var(--pr);border:1px solid var(--pr)}.btn.sm{padding:4px 8px;font-size:12px;flex:none;border-radius:8px}.btn.dg{background:var(--rd)}.btn:disabled{opacity:.5}
+.acts{display:flex;gap:8px;flex:none}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font:inherit}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+.msg{padding:9px;border-radius:8px;margin:8px 0;font-size:13px}.msg.err{background:#fbd9d4;color:#8a1d12}.msg.ok{background:#d6f3e6;color:#075e3f}
+.toast{position:fixed;top:54px;inset-inline:12px;z-index:50;max-width:616px;margin:0 auto;padding:10px 12px;border-radius:10px;font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.25)}.toast.ok{background:#0b6b4f;color:#fff}.toast.err{background:#c0392b;color:#fff}
+.sbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end}
+.sheet{background:var(--card);width:100%;max-width:640px;margin:0 auto;border-radius:18px 18px 0 0;max-height:92dvh;overflow:auto;padding:14px 16px calc(16px + env(safe-area-inset-bottom))}
+.sheet h2{font-size:16px;margin:0 0 4px}
+.ocr{background:var(--bg);border:1px dashed var(--bd);border-radius:10px;padding:8px 10px;margin-top:6px}
+#login{max-width:380px;margin:12vh auto;padding:0 16px}#login h2{margin-top:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+.scrolly{overflow:auto}
+@media print{header,nav,.acts,.pager{display:none!important}html,body{overflow:visible}}
 </style>
 </head>
 <body>
@@ -64,8 +91,6 @@ const MON=lang=>['01','02','03','04','05','06','07','08','09','10','11','12'];
 let S={tab:'dash',units:[],cats:[],msg:null,user:null};
 
 function setLang(l){lang=l;try{localStorage.setItem('lang',l)}catch(e){}document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';render()}
-function flash(text,ok){S.msg={text,ok};render();setTimeout(()=>{S.msg=null;render()},4000)}
-const msgHtml=()=>S.msg?`<div class="msg ${S.msg.ok?'ok':'err'}">${esc(S.msg.text)}</div>`:'';
 async function rpc(fn,args){const {data,error}=await sb.rpc(fn,args);if(error)throw new Error(error.message);return data}
 async function q(p){const {data,error}=await p;if(error)throw new Error(error.message);return data}
 
@@ -108,93 +133,111 @@ async function renderVerify(token){
 function shell(body){
   const tabs=[['dash','🏠',t('dash')],['dues','📅',t('dues')],['exp','🧾',t('exp')],['treas','💰',t('treas')],['more','☰',t('more')]];
   $('#app').innerHTML=`<header><h1>${t('app')}</h1><button onclick="setLang(lang==='fr'?'ar':'fr')">${t('lang')}</button><button onclick="sb.auth.signOut().then(boot)">${t('logout')}</button></header>
-  <main>${msgHtml()}${body}</main><nav>${tabs.map(([k,i,l])=>`<a href="#" class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render();return false"><span>${i}</span>${l}</a>`).join('')}</nav>`;
+  <main>${body}</main><nav>${tabs.map(([k,i,l])=>`<a href="#" class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render();return false"><span>${i}</span>${l}</a>`).join('')}</nav>`;
 }
+S.cache={};S.useCache=false;S.page={};
+async function load(key,fn){if(S.useCache&&S.cache[key])return S.cache[key];return S.cache[key]=await fn()}
 async function render(){
   if(!S.user)return;
-  shell('<div class="card">…</div>');
-  try{const html=await views[S.tab]();shell(html);if(after[S.tab])after[S.tab]()}catch(e){shell(`<div class="msg err">${esc(e.message)}</div>`)}
+  try{const html=await views[S.tab]();S.useCache=false;shell(html);if(after[S.tab])after[S.tab]()}catch(e){S.useCache=false;shell(`<div class="msg err">${esc(e.message)}</div>`)}
 }
+function toast(text,ok){const old=document.querySelector('.toast');if(old)old.remove();const d=document.createElement('div');d.className='toast '+(ok?'ok':'err');d.textContent=text;document.body.appendChild(d);setTimeout(()=>d.remove(),ok?3500:6000)}
+function closeSheet(){const s=document.querySelector('.sbg');if(s)s.remove()}
+function openSheet(html,bind){closeSheet();const bg=document.createElement('div');bg.className='sbg';bg.innerHTML=`<div class="sheet">${html}</div>`;
+  bg.onclick=e=>{if(e.target===bg)closeSheet()};document.body.appendChild(bg);if(bind)bind(bg.firstElementChild)}
+function pageOf(key,rows,per){const n=Math.max(1,Math.ceil(rows.length/per));let p=Math.min(S.page[key]||0,n-1);S.page[key]=p;return {items:rows.slice(p*per,p*per+per),p,n}}
+function pager(key,pg){return `<div class="pager"><button data-pg="${key}:-1" ${pg.p<=0?'disabled':''}>‹</button><span>${pg.p+1} / ${pg.n}</span><button data-pg="${key}:1" ${pg.p>=pg.n-1?'disabled':''}>›</button></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-pg]');if(!b)return;const [k,d]=b.dataset.pg.split(':');S.page[k]=(S.page[k]||0)+(+d);S.useCache=true;render()});
 
-/* ---------- views ---------- */
+/* ---------- views : chaque onglet tient dans l'écran, sans défilement ---------- */
 const views={
 async dash(){
-  const [c,fl,ub]=await Promise.all([q(sb.from('v_cash_summary').select('*').limit(1)),q(sb.from('v_monthly_flows').select('*').order('month',{ascending:false}).limit(12)),q(sb.from('v_unit_balances').select('*').order('unit_number'))]);
-  const k=c[0]||{};fl.reverse();
-  const mx=Math.max(1,...fl.map(f=>Math.max(+f.inflows,+f.outflows)));
-  const bars=fl.map(f=>`<div title="${esc(f.month)}"><span style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%"><i style="background:var(--pr);height:${(+f.inflows/mx*100)}%"></i><i style="background:var(--rd);height:${(+f.outflows/mx*100)}%"></i></span>${esc(String(f.month).slice(5,7))}</div>`).join('');
-  return `<div class="grid">
-  <div class="card kpi"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
-  <div class="card kpi"><small>${t('pending')}</small><b class="warn">${money(k.pending_expenses)}</b></div>
-  <div class="card kpi"><small>${t('after')}</small><b>${money(k.balance_after_debts)}</b></div>
-  <div class="card kpi"><small>${t('arrears')}</small><b class="neg">${money(k.dues_arrears)}</b></div></div>
-  <div class="card"><h2>${t('flows')}</h2>${fl.length?`<div class="bar">${bars}</div><div class="row" style="font-size:12px;margin-top:6px"><span style="color:var(--pr)">■ ${t('in')}</span><span style="color:var(--rd)">■ ${t('out')}</span></div>`:t('none')}</div>
-  <div class="card"><h2>${t('unit')}</h2><div class="scroll"><table><tr><th>${t('unit')}</th><th class="n">${t('due')}</th><th class="n">${t('paid')}</th><th class="n">${t('arrears')}</th></tr>
-  ${ub.map(u=>`<tr><td>${esc(u.unit_number)} ${u.is_late?`<span class="tag pending">${u.late_months} ${t('late')}</span>`:''}</td><td class="n">${num(u.total_due)}</td><td class="n">${num(u.total_paid)}</td><td class="n ${+u.arrears>0?'neg':''}">${num(u.arrears)}</td></tr>`).join('')}</table></div></div>`;
+  const [c,fl,ub]=await Promise.all([load('cash',()=>q(sb.from('v_cash_summary').select('*').limit(1))),load('flows',()=>q(sb.from('v_monthly_flows').select('*').order('month',{ascending:false}).limit(12))),load('ub',()=>q(sb.from('v_unit_balances').select('*').order('unit_number')))]);
+  const k=c[0]||{};const f=[...fl].reverse();
+  const mx=Math.max(1,...f.map(x=>Math.max(+x.inflows,+x.outflows)));
+  const bars=f.map(x=>`<div class="col"><div class="pair"><i class="a" style="height:${+x.inflows/mx*100}%"></i><i class="b" style="height:${+x.outflows/mx*100}%"></i></div><em>${esc(String(x.month).slice(5,7))}</em></div>`).join('');
+  return `<div class="grid2">
+  <div class="tile kpi"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
+  <div class="tile kpi"><small>${t('after')}</small><b>${money(k.balance_after_debts)}</b></div>
+  <div class="tile kpi"><small>${t('pending')}</small><b class="warn">${money(k.pending_expenses)}</b></div>
+  <div class="tile kpi"><small>${t('arrears')}</small><b class="neg">${money(k.dues_arrears)}</b></div></div>
+  <div class="tile fill"><div class="ttl">${t('flows')} <span style="color:var(--ok)">■ ${t('in')}</span><span style="color:var(--pe)">■ ${t('out')}</span></div>${f.length?`<div class="bars">${bars}</div>`:t('none')}</div>
+  <div class="units">${ub.map(u=>{const pc=+u.total_due>0?Math.min(100,+u.total_paid/+u.total_due*100):0;return `<div class="tile unit"><b>${esc(u.unit_number)}</b>${u.is_late?`<span class="tag">${u.late_months} ${t('late')}</span>`:''}<div class="pb"><i style="width:${pc}%"></i></div><small>${num(u.total_paid)} / ${num(u.total_due)} · <span class="${+u.arrears>0?'neg':''}">${num(u.arrears)}</span></small></div>`}).join('')}</div>`;
 },
 async dues(){
-  const rows=await q(sb.from('v_dues_detail').select('*').order('period_year',{ascending:false}).order('period_month',{ascending:false}).limit(200));
-  const opts=S.units.map(u=>`<option value="${esc(u.id)}">${esc(u.unit_number)}</option>`).join('');
-  return `<div class="card"><h2>${t('newpay')}</h2>
-  <label>${t('unit')}</label><select id="pu">${opts}</select>
-  <label>${t('amount')}</label><input id="pa" type="number" inputmode="decimal" min="0.01" step="0.01">
-  <div class="row"><div style="flex:1"><label>${t('date')}</label><input id="pd" type="date" value="${today()}"></div>
-  <div style="flex:1"><label>${t('method')}</label><select id="pm"><option value="cash">${t('cash_')}</option><option value="transfer">${t('transfer')}</option><option value="check">${t('check')}</option><option value="other">${t('other')}</option></select></div></div>
-  <button class="btn" id="paysave">${t('save')}</button>
-  <button class="btn sec" id="gen">${t('genDues')}</button></div>
-  <div class="card"><h2>${t('dues')}</h2><div class="scroll"><table><tr><th>${t('unit')}</th><th>${t('period')}</th><th class="n">${t('due')}</th><th class="n">${t('paid')}</th><th class="n">${t('remaining')}</th><th>${t('status')}</th></tr>
-  ${rows.map(r=>`<tr><td>${esc(r.unit_number)}</td><td>${String(r.period_month).padStart(2,'0')}/${esc(r.period_year)}</td><td class="n">${num(r.due_amount)}</td><td class="n">${num(r.paid_amount)}</td><td class="n">${num(r.remaining)}</td><td><span class="tag ${esc(r.status)}">${esc(r.status==='paid'?t('paid'):r.status==='partial'?t('partial'):t('pend'))}</span></td></tr>`).join('')||`<tr><td colspan=6>${t('none')}</td></tr>`}</table></div></div>`;
+  const rows=await load('dues',()=>q(sb.from('v_dues_detail').select('*').order('period_year',{ascending:false}).order('period_month',{ascending:false}).limit(400)));
+  const yr=new Date().getFullYear();const cur=rows.filter(r=>+r.period_year===yr);
+  const by={};cur.forEach(r=>{by[r.unit_number+'|'+r.period_month]=r});
+  const sum=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
+  const head=`<div></div>`+[...Array(12)].map((_,i)=>`<div class="h">${i+1}</div>`).join('');
+  const body=S.units.map(u=>`<div class="u" data-u="${esc(u.id)}">${esc(u.unit_number)}</div>`+[...Array(12)].map((_,i)=>{const r=by[u.unit_number+'|'+(i+1)];return `<div class="c ${r?esc(r.status):''}" title="${r?num(r.paid_amount)+' / '+num(r.due_amount):''}"></div>`}).join('')).join('');
+  return `<div class="grid3"><div class="tile kpi"><small>${t('due')}</small><b>${num(sum('due_amount'))}</b></div><div class="tile kpi"><small>${t('paid')}</small><b class="pos">${num(sum('paid_amount'))}</b></div><div class="tile kpi"><small>${t('remaining')}</small><b class="neg">${num(sum('remaining'))}</b></div></div>
+  <div class="tile fill"><div class="ttl">${t('dues')} ${yr}</div><div class="heat">${head}${body}</div></div>
+  <div class="legend"><span><i style="background:var(--ok)"></i>${t('paid')}</span><span><i style="background:var(--pa)"></i>${t('partial')}</span><span><i style="background:var(--pe)"></i>${t('pend')}</span></div>
+  <div class="acts"><button class="btn" id="newpay">+ ${t('newpay')}</button><button class="btn sec" id="gen">${t('genDues')}</button></div>`;
 },
 async exp(){
-  const rows=await q(sb.from('expenses').select('id,description,amount,expense_date,status,supplier,category_id,deleted_at').is('deleted_at',null).order('expense_date',{ascending:false}).limit(200));
+  const rows=await load('exp',()=>q(sb.from('expenses').select('id,description,amount,expense_date,status,supplier,category_id').is('deleted_at',null).order('expense_date',{ascending:false}).limit(300)));
   const cn=Object.fromEntries(S.cats.map(c=>[c.id,c.name]));
-  return `<div class="card"><h2>${t('newexp')}</h2>
-  <div class="card" style="background:var(--bg)"><b>Importer une facture (OCR)</b>
-  <input id="ocrf" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="margin-top:8px">
-  <button class="btn sec" id="ocrgo" type="button">Analyser la facture</button>
-  <div id="ocrres"></div></div>
-  <label>${t('desc')}</label><input id="ed" maxlength="200">
-  <label>${t('amount')}</label><input id="ea" type="number" inputmode="decimal" min="0.01" step="0.01">
-  <label>${t('cat')}</label><select id="ec"><option value="">—</option>${S.cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select>
-  <div class="row"><div style="flex:1"><label>${t('date')}</label><input id="edt" type="date" value="${today()}"></div>
-  <div style="flex:1"><label>${t('status')}</label><select id="es"><option value="paid">${t('paidexp')}</option><option value="pending">${t('pendexp')}</option></select></div></div>
-  <label>${t('supplier')}</label><input id="esu" maxlength="120">
-  <button class="btn" id="expsave">${t('save')}</button></div>
-  <div class="card"><h2>${t('exp')}</h2><div class="scroll"><table><tr><th>${t('date')}</th><th>${t('desc')}</th><th>${t('cat')}</th><th class="n">${t('amount')}</th><th></th></tr>
-  ${rows.map(r=>`<tr><td>${esc(r.expense_date)}</td><td>${esc(r.description)}</td><td>${esc(cn[r.category_id]||'')}</td><td class="n">${num(r.amount)}</td><td>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button> `:''}<button class="btn sm sec" data-att="${esc(r.id)}">📎</button> <button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></td></tr>`).join('')||`<tr><td colspan=5>${t('none')}</td></tr>`}</table></div></div>`;
+  const tot={};rows.forEach(r=>{const n=cn[r.category_id]||'—';tot[n]=(tot[n]||0)+ +r.amount});
+  const cats=Object.entries(tot).sort((a,b)=>b[1]-a[1]).slice(0,5);const mx=Math.max(1,...cats.map(c=>c[1]));
+  const all=rows.reduce((a,r)=>a+ +r.amount,0),pend=rows.filter(r=>r.status==='pending').reduce((a,r)=>a+ +r.amount,0);
+  const pg=pageOf('exp',rows,4);
+  return `<div class="grid2"><div class="tile kpi"><small>${t('exp')}</small><b>${money(all)}</b></div><div class="tile kpi"><small>${t('pending')}</small><b class="warn">${money(pend)}</b></div></div>
+  <div class="tile fill"><div class="ttl">${t('cat')}</div><div class="cats">${cats.map(([n,v])=>`<div class="cat"><span>${esc(n)}</span><div class="pb"><i style="width:${v/mx*100}%"></i></div><b>${num(v)}</b></div>`).join('')||t('none')}</div></div>
+  <div class="tile list">${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}</b><small>${esc(r.expense_date)}${r.status==='pending'?' · '+t('pendexp'):''}</small></div><span class="am">${num(r.amount)}</span>${r.status==='pending'?`<button class="btn sm" data-pay="${esc(r.id)}">${t('payNow')}</button>`:''}<button class="btn sm sec" data-att="${esc(r.id)}">📎</button><button class="btn sm dg" data-cx="${esc(r.id)}">✕</button></div>`).join('')||`<div class="li">${t('none')}</div>`}${pager('exp',pg)}</div>
+  <div class="acts"><button class="btn" id="newexp">+ ${t('newexp')}</button></div>`;
 },
 async treas(){
-  const rows=await q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(300));
-  S.journal=rows;
-  return `<div class="card"><div class="row"><h2 style="flex:1">${t('journal')}</h2><button class="btn sm sec noprint" id="csv">${t('export')}</button><button class="btn sm sec noprint" onclick="print()">${t('print')}</button></div>
-  <div class="scroll"><table><tr><th>${t('date')}</th><th>${t('desc')}</th><th class="n">${t('amount')}</th><th class="n">${t('balance')}</th></tr>
-  ${rows.map(r=>`<tr><td>${esc(r.movement_date)}</td><td>${esc(r.description)}${r.movement_type==='cancellation'?' <span class="tag cancelled">↩</span>':''}</td><td class="n ${+r.amount<0?'neg':'pos'}">${num(r.amount)}</td><td class="n">${num(r.running_balance)}</td></tr>`).join('')||`<tr><td colspan=4>${t('none')}</td></tr>`}</table></div></div>`;
+  const [rows,c]=await Promise.all([load('journal',()=>q(sb.from('v_treasury_journal').select('*').order('movement_date',{ascending:false}).order('created_at',{ascending:false}).limit(400))),load('cash',()=>q(sb.from('v_cash_summary').select('*').limit(1)))]);
+  S.journal=rows;const k=c[0]||{};const pg=pageOf('treas',rows,5);
+  return `<div class="tile kpi big"><small>${t('cash')}</small><b class="${+k.cash_balance<0?'neg':'pos'}">${money(k.cash_balance)}</b></div>
+  <div class="grid2"><div class="tile kpi"><small>${t('in')}</small><b class="pos">${money(k.inflows)}</b></div><div class="tile kpi"><small>${t('out')}</small><b class="neg">${money(k.outflows)}</b></div></div>
+  <div class="tile fill"><div class="ttl">${t('journal')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.description)}${r.movement_type==='cancellation'?' ↩':''}</b><small>${esc(r.movement_date)} · ${t('balance')} ${num(r.running_balance)}</small></div><span class="am ${+r.amount<0?'neg':'pos'}">${num(r.amount)}</span></div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('treas',pg)}</div>
+  <div class="acts"><button class="btn sec" id="csv">${t('export')}</button><button class="btn sec" onclick="print()">${t('print')}</button></div>`;
 },
 async more(){
-  const rc=await q(sb.from('receipts').select('id,receipt_number,owner_name,amount,payment_date,status,verification_token,amount_in_words,period_label,payment_method,remaining_balance').order('created_at',{ascending:false}).limit(100));
-  S.receipts=rc;
-  return `<div class="card"><h2>${t('receipts')}</h2><div class="scroll"><table><tr><th>N°</th><th>${t('unit')}</th><th class="n">${t('amount')}</th><th></th></tr>
-  ${rc.map(r=>`<tr><td>${esc(r.receipt_number)}${r.status!=='valid'?' <span class="tag cancelled">✕</span>':''}</td><td>${esc(r.owner_name)}<br><small>${esc(r.payment_date)}</small></td><td class="n">${num(r.amount)}</td><td><button class="btn sm" data-pdf="${esc(r.id)}">${t('pdf')}</button> <button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button></td></tr>`).join('')||`<tr><td colspan=4>${t('none')}</td></tr>`}</table></div></div>
-  <div class="card"><h2>${t('report')}</h2><button class="btn sec" id="rep">${t('export')} (CSV)</button></div>`;
+  const rc=await load('rc',()=>q(sb.from('receipts').select('id,receipt_number,owner_name,amount,payment_date,status,verification_token,amount_in_words,period_label,payment_method,remaining_balance').order('created_at',{ascending:false}).limit(200)));
+  S.receipts=rc;const pg=pageOf('more',rc,4);
+  return `<div class="tile fill"><div class="ttl">${t('receipts')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.receipt_number)}${r.status!=='valid'?' ✕':''}</b><small>${esc(r.owner_name)} · ${esc(r.payment_date)}</small></div><span class="am">${num(r.amount)}</span><button class="btn sm" data-pdf="${esc(r.id)}">PDF</button><button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button></div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('more',pg)}</div>
+  <div class="acts"><button class="btn sec" id="rep">${t('report')} (CSV)</button></div>`;
 }};
 
 /* ---------- actions ---------- */
 let busy=false;
-async function guarded(fn){if(busy)return;busy=true;try{await fn()}catch(e){flash(e.message,false)}finally{busy=false}}
-const after={
-dues(){
-  let rid=uuid();// idempotence: même clé tant que le formulaire n'a pas réussi
-  $('#paysave').onclick=()=>guarded(async()=>{
-    const amount=parseFloat($('#pa').value);if(!(amount>0))throw new Error('Montant invalide');
-    const r=await rpc('record_payment',{p_unit_id:$('#pu').value,p_amount:amount,p_payment_date:$('#pd').value,p_method:$('#pm').value,p_request_id:rid});
-    rid=uuid();flash(r.duplicate?'Déjà enregistré':`${t('saved')} – ${r.receipt_number||''}`,true);
-    if(r.receipt_id&&!r.duplicate){S.tab='dues';await makePdf(r.receipt_id)}
-  });
-  $('#gen').onclick=()=>guarded(async()=>{const d=new Date();const n=await rpc('generate_dues',{p_year:d.getFullYear(),p_month:d.getMonth()+1});flash(`${n} ${t('dues')}`,true)});
-},
-exp(){
+async function guarded(fn){if(busy)return;busy=true;try{await fn()}catch(e){toast(e.message,false)}finally{busy=false}}
+function flash(text,ok){toast(text,ok);if(ok){closeSheet();S.cache={};S.useCache=false;render()}}
+function unitOptions(sel){return S.units.map(u=>`<option value="${esc(u.id)}" ${u.id===sel?'selected':''}>${esc(u.unit_number)}</option>`).join('')}
+function paySheet(unitId){
   let rid=uuid();
-  S.ocrFile=null;
+  openSheet(`<h2>${t('newpay')}</h2>
+  <label>${t('unit')}</label><select id="pu">${unitOptions(unitId)}</select>
+  <label>${t('amount')}</label><input id="pa" type="number" inputmode="decimal" min="0.01" step="0.01" autofocus>
+  <div class="row"><div><label>${t('date')}</label><input id="pd" type="date" value="${today()}"></div>
+  <div><label>${t('method')}</label><select id="pm"><option value="cash">${t('cash_')}</option><option value="transfer">${t('transfer')}</option><option value="check">${t('check')}</option><option value="other">${t('other')}</option></select></div></div>
+  <div class="acts" style="margin-top:12px"><button class="btn" id="paysave">${t('save')}</button></div>`,sh=>{
+    sh.querySelector('#paysave').onclick=()=>guarded(async()=>{
+      const amount=parseFloat(sh.querySelector('#pa').value);if(!(amount>0))throw new Error('Montant invalide');
+      const r=await rpc('record_payment',{p_unit_id:sh.querySelector('#pu').value,p_amount:amount,p_payment_date:sh.querySelector('#pd').value,p_method:sh.querySelector('#pm').value,p_request_id:rid});
+      rid=uuid();flash(r.duplicate?'Déjà enregistré':`${t('saved')} – ${r.receipt_number||''}`,true);
+      if(r.receipt_id&&!r.duplicate){await makePdf(r.receipt_id)}
+    })});
+}
+function expSheet(){
+  let rid=uuid();S.ocrFile=null;
+  openSheet(`<h2>${t('newexp')}</h2>
+  <div class="ocr"><b>Importer une facture (OCR)</b>
+  <input id="ocrf" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="margin-top:6px">
+  <div class="acts" style="margin-top:8px"><button class="btn sec" id="ocrgo" type="button">Analyser la facture</button></div>
+  <div id="ocrres"></div></div>
+  <label>${t('desc')}</label><input id="ed" maxlength="200">
+  <label>${t('amount')}</label><input id="ea" type="number" inputmode="decimal" min="0.01" step="0.01">
+  <label>${t('cat')}</label><select id="ec"><option value="">—</option>${S.cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select>
+  <div class="row"><div><label>${t('date')}</label><input id="edt" type="date" value="${today()}"></div>
+  <div><label>${t('status')}</label><select id="es"><option value="paid">${t('paidexp')}</option><option value="pending">${t('pendexp')}</option></select></div></div>
+  <label>${t('supplier')}</label><input id="esu" maxlength="120">
+  <div class="acts" style="margin-top:12px"><button class="btn" id="expsave">${t('save')}</button></div>`,sh=>{
+  const $=s=>sh.querySelector(s);
   async function saveExpense(){
     const amount=parseFloat($('#ea').value);
     const r=await rpc('record_expense',{p_description:$('#ed').value.trim(),p_amount:amount,p_expense_date:$('#edt').value,p_category_id:$('#ec').value||null,p_status:$('#es').value,p_supplier:$('#esu').value.trim()||null,p_request_id:rid});
@@ -208,29 +251,33 @@ exp(){
     let text;try{text=await ocrText(f)}catch(e){out.innerHTML='<div class="msg err">Lecture OCR impossible : '+esc(e.message)+'</div>';return}
     const res=parseInvoice(text);
     if(!res.type){out.innerHTML='<div class="msg err">Numéro de police non reconnu. Vérification manuelle nécessaire.</div>';return}
-    if(res.amount==null){out.innerHTML=`<div class="msg err">Montant net à payer non détecté. Veuillez saisir le montant manuellement.</div>`;
-      pickCat(res.type);S.ocrFile=f;return}
-    pickCat(res.type);S.ocrFile=f;
+    const cat=()=>{const want=res.type==='EAU'?'eau':'electricite';const norm=x=>x.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();const c=S.cats.find(c=>norm(c.name)===want);if(c)$('#ec').value=c.id};
+    cat();S.ocrFile=f;
+    if(res.amount==null){out.innerHTML=`<div class="msg err">Montant net à payer non détecté. Veuillez saisir le montant manuellement.</div>`;return}
     $('#ea').value=res.amount.toFixed(2);
     if(!$('#ed').value.trim())$('#ed').value='Facture '+(res.type==='EAU'?'eau':'électricité')+' – police '+res.police;
     out.innerHTML=`<div class="msg ok"><b>${esc(res.type)}</b> – police ${esc(res.police)}<br>Montant net à payer TTC détecté : <b>${money(res.amount)}</b>
       ${res.others.length?`<br><small>Autres montants lus sur la ligne : ${res.others.map(x=>esc(num(x))).join(', ')}</small>`:''}
       <br><small>Vérifiez avec la facture. Rien n'est enregistré tant que vous ne confirmez pas.</small></div>
-      <div class="row"><button class="btn" id="ocrok" type="button">Confirmer et enregistrer</button><button class="btn sec" id="ocrno" type="button">Annuler / modifier</button></div>`;
+      <div class="acts"><button class="btn" id="ocrok" type="button">Confirmer et enregistrer</button><button class="btn sec" id="ocrno" type="button">Annuler / modifier</button></div>`;
     $('#ocrok').onclick=()=>guarded(saveExpense);
     $('#ocrno').onclick=()=>{S.ocrFile=null;$('#ea').value='';$('#ocrf').value='';out.innerHTML=''};
-  });
+  })});
+}
+const after={
+dues(){
+  $('#newpay').onclick=()=>paySheet();
+  document.querySelectorAll('[data-u]').forEach(el=>el.onclick=()=>paySheet(el.dataset.u));
+  $('#gen').onclick=()=>guarded(async()=>{const d=new Date();const n=await rpc('generate_dues',{p_year:d.getFullYear(),p_month:d.getMonth()+1});flash(`${n} ${t('dues')}`,true)});
+},
+exp(){
+  $('#newexp').onclick=()=>expSheet();
   document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>guarded(async()=>{
     const why=prompt(t('reason'));if(!why)return;await rpc('cancel_expense',{p_expense_id:b.dataset.cx,p_reason:why});flash(t('saved'),true)}));
   document.querySelectorAll('[data-att]').forEach(b=>b.onclick=()=>{
     const inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';
     inp.onchange=()=>guarded(async()=>{const f=inp.files[0];if(!f)return;if(f.size>10485760)throw new Error('Fichier trop lourd (10 Mo max)');
-      const ext=(f.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').slice(0,5);
-      const path=`expenses/${b.dataset.att}/${uuid()}.${ext}`;
-      const up=await sb.storage.from('syndic-documents').upload(path,f,{contentType:f.type});if(up.error)throw new Error(up.error.message);
-      const bid=(await q(sb.from('buildings').select('id').limit(1)))[0].id;
-      await q(sb.from('attachments').insert({building_id:bid,storage_path:path,file_name:f.name.slice(0,120),mime_type:f.type,file_size:f.size,expense_id:b.dataset.att}));
-      flash(t('saved'),true)});inp.click()});
+      await attachFile(b.dataset.att,f);flash(t('saved'),true)});inp.click()});
   document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>guarded(async()=>{
     await rpc('pay_expense',{p_expense_id:b.dataset.pay,p_date:today(),p_method:'cash'});flash(t('saved'),true)}));
 },
