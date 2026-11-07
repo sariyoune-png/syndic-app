@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v15 – Gestion de copropriété</title>
+<title>Syndic v16 – Gestion de copropriété</title>
 <style>
 :root{--bg:#11151b;--card:#181e26;--tx:#f3f5f7;--mu:#a7b1bf;--pr:#d4f77d;--prd:#b8dc5f;--rd:#ff7a6b;--or:#f0b13b;--bd:#35404c;--ok:#d4f77d;--pa:#f0b13b;--pe:#ff7a6b;--on:#11151b;--olive:#52643d;--fd:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fm:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -474,14 +474,29 @@ function pickCat(type){const want=type==='EAU'?'eau':'electricite';
   const norm=x=>x.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   const c=S.cats.find(c=>norm(c.name)===want);if(c)$('#ec').value=c.id}
 function loadScript(src){return new Promise((ok,ko)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>ko(new Error('Chargement impossible (connexion ?)'));document.head.appendChild(e)})}
-async function prep(src){
+async function prep(src,o={}){
+  // o.red : lit le canal rouge (les cases orange « Net à payer » y deviennent blanches, le texte noir reste noir)
+  // o.y0/o.y1 : ne garde qu'une bande horizontale de la page (0 à 1)
   let bmp;if(src instanceof HTMLCanvasElement){bmp=src}else{bmp=await createImageBitmap(src,{imageOrientation:'from-image'})}
-  const w=bmp.width,h=bmp.height,k=Math.min(2.2,2600/Math.max(w,h));
-  const cv=document.createElement('canvas');cv.width=Math.round(w*k);cv.height=Math.round(h*k);
-  const c=cv.getContext('2d');c.filter='grayscale(1) contrast(1.5) brightness(1.05)';c.drawImage(bmp,0,0,cv.width,cv.height);return cv}
+  const w=bmp.width,h=bmp.height,y0=Math.round(h*(o.y0||0)),sh=Math.round(h*((o.y1||1)))-y0,k=Math.min(2.2,2600/Math.max(w,h));
+  const cv=document.createElement('canvas');cv.width=Math.round(w*k);cv.height=Math.round(sh*k);
+  const c=cv.getContext('2d');
+  if(o.red){c.drawImage(bmp,0,y0,w,sh,0,0,cv.width,cv.height);
+    const d=c.getImageData(0,0,cv.width,cv.height),p=d.data;
+    for(let i=0;i<p.length;i+=4){const v=Math.max(0,Math.min(255,(p[i]-128)*1.8+128));p[i]=p[i+1]=p[i+2]=v}
+    c.putImageData(d,0,0)}
+  else{c.filter='grayscale(1) contrast(1.5) brightness(1.05)';c.drawImage(bmp,0,y0,w,sh,0,0,cv.width,cv.height)}
+  return cv}
 async function ocrImage(src){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js');
-  const cv=await prep(src);const wk=await Tesseract.createWorker('fra');
-  try{await wk.setParameters({tessedit_pageseg_mode:'11'});const r=await wk.recognize(cv);return r.data.text}finally{await wk.terminate()}}
+  const wk=await Tesseract.createWorker('fra');
+  try{
+    await wk.setParameters({tessedit_pageseg_mode:'11'});
+    const t1=(await wk.recognize(await prep(src))).data.text;
+    // 2e passe : bande basse de la facture (net à payer, timbre) lue sur le canal rouge
+    await wk.setParameters({tessedit_pageseg_mode:'6'});
+    let t2='';try{t2=(await wk.recognize(await prep(src,{red:true,y0:.62,y1:.97}))).data.text}catch(e){}
+    return t1+'\n'+t2
+  }finally{await wk.terminate()}}
 async function ocrText(file){
   if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
