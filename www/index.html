@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v17 – Gestion de copropriété</title>
+<title>Syndic v18 – Gestion de copropriété</title>
 <style>
 :root{--bg:#11151b;--card:#181e26;--tx:#f3f5f7;--mu:#a7b1bf;--pr:#d4f77d;--prd:#b8dc5f;--rd:#ff7a6b;--or:#f0b13b;--bd:#35404c;--ok:#d4f77d;--pa:#f0b13b;--pe:#ff7a6b;--on:#11151b;--olive:#52643d;--fd:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fm:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -214,7 +214,7 @@ async more(){
   return `<div class="tile fill"><div class="ttl">${t('receipts')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.receipt_number)}${r.status!=='valid'?' ✕':''}</b><small>${esc(r.owner_name)} · ${esc(r.payment_date)}</small></div><span class="am">${num(r.amount)}</span><button class="btn sm" data-pdf="${esc(r.id)}">PDF</button><button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button>${r.status==='valid'?`<button class="btn sm dg ib" data-cxp="${esc(r.payment_id)}" aria-label="Annuler le paiement">${ico('x',15)}</button>`:''}</div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('more',pg)}</div>
   <div class="acts"><button class="btn" id="repdf">${t('report')} (PDF)</button></div>
   <div class="acts"><button class="btn sec" id="waauto">Relances WhatsApp automatiques</button></div>
-  <div class="acts"><button class="btn sec" id="gen">${t('genDues')}</button></div>`;
+  <div class="acts"><button class="btn sec" id="cots">Gérer les cotisations</button></div>`;
 }};
 
 /* ---------- actions ---------- */
@@ -256,14 +256,35 @@ function unitSheet(id){
   <button class="btn sec" id="u_rel">Relance WhatsApp</button>
   <button class="btn sec" id="u_pdf">Relevé de situation (PDF)</button></div>`,sh=>{
     sh.querySelector('#u_pay').onclick=()=>paySheet(id);
-    sh.querySelector('#u_rel').onclick=()=>guarded(async()=>{const late=lateRows(await duesRows(),u.unit_number);if(!late.length)throw new Error(u.unit_number+' : aucun impayé');openWa(relanceText(u.unit_number,late))});
+    sh.querySelector('#u_rel').onclick=()=>guarded(async()=>{const late=lateRows(await duesRows(),u.unit_number);if(!late.length)throw new Error(u.unit_number+' : aucun impayé');openWa(relanceText(u.unit_number,late),await unitPhone(id))});
     sh.querySelector('#u_pdf').onclick=()=>guarded(()=>unitStatement(id));
+  });
+}
+async function cotSheet(unitId,year){
+  unitId=unitId||S.units[0].id;year=year||new Date().getFullYear();
+  const rows=await q(sb.from('v_dues_detail').select('*').eq('period_year',year).order('period_month'));
+  const dues=await q(sb.from('dues').select('id,unit_id,period_month,amount,status').eq('period_year',year).neq('status','cancelled').order('period_month'));
+  const u=S.units.find(x=>x.id===unitId);const mine=dues.filter(d=>d.unit_id===unitId);
+  const paidOf=m=>{const r=rows.find(x=>x.unit_number===u.unit_number&&+x.period_month===m);return r?+r.paid_amount:0};
+  const free=[...Array(12)].map((_,i)=>i+1).filter(m=>!mine.some(d=>d.period_month===m));
+  openSheet(`<h2>Gérer les cotisations</h2>
+  <div class="row"><div><label>Appartement</label><select id="cu">${unitOptions(unitId)}</select></div><div><label>Année</label><select id="cy">${[year-1,year,year+1].map(y=>`<option ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
+  <div class="tile list" style="max-height:34vh;overflow:auto;margin-top:8px">${mine.map(d=>{const pd=paidOf(d.period_month);return `<div class="li"><div class="d"><b>${MOIS[d.period_month-1]}</b><small>payé ${num(pd)} · ${d.status==='paid'?'soldée':d.status==='partial'?'partielle':'à payer'}</small></div><input data-am="${d.id}" type="number" step="0.01" min="0.01" value="${d.amount}" style="width:84px"><button class="btn sm" data-up="${d.id}">OK</button><button class="btn sm dg ib" data-del="${d.id}" aria-label="Supprimer">${ico('x',15)}</button></div>`}).join('')||`<div class="li">Aucune cotisation pour ${year}</div>`}</div>
+  ${free.length?`<label style="margin-top:10px">Ajouter une cotisation</label><div class="row"><select id="cm">${free.map(m=>`<option value="${m}">${MOIS[m-1]}</option>`).join('')}</select><input id="ca" type="number" step="0.01" min="0.01" value="${+u.monthly_fee||100}"></div><div class="acts" style="margin-top:8px"><button class="btn" id="cadd">Ajouter</button></div>`:''}
+  <details style="margin-top:12px"><summary style="color:var(--mu)">Générer les cotisations du mois</summary><small style="color:var(--mu)">Crée la cotisation du mois en cours pour les 4 appartements (déjà fait automatiquement le 1er de chaque mois). Sans effet si elles existent déjà.</small><div class="acts" style="margin-top:8px"><button class="btn sec" id="gen">Générer le mois en cours</button></div></details>`,sh=>{
+    const again=()=>{closeSheet();S.cache={};S.useCache=false;guarded(()=>cotSheet(sh.querySelector('#cu').value,+sh.querySelector('#cy').value))};
+    sh.querySelector('#cu').onchange=again;sh.querySelector('#cy').onchange=again;
+    const done=msg=>{toast(msg,true);S.cache={};S.useCache=false;render();guarded(()=>cotSheet(unitId,year))};
+    const ca=sh.querySelector('#cadd');if(ca)ca.onclick=()=>guarded(async()=>{await rpc('admin_add_due',{p_unit_id:unitId,p_year:year,p_month:+sh.querySelector('#cm').value,p_amount:parseFloat(sh.querySelector('#ca').value)});done('Cotisation ajoutée')});
+    sh.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>guarded(async()=>{await rpc('admin_update_due',{p_due_id:b.dataset.up,p_amount:parseFloat(sh.querySelector(`[data-am="${b.dataset.up}"]`).value)});done('Montant modifié')}));
+    sh.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>guarded(async()=>{const why=prompt('Motif de la suppression de cette cotisation :');if(!why)return;await rpc('admin_cancel_due',{p_due_id:b.dataset.del,p_reason:why});done('Cotisation supprimée')}));
+    sh.querySelector('#gen').onclick=()=>guarded(async()=>{const d=new Date();const n=await rpc('generate_dues',{p_year:d.getFullYear(),p_month:d.getMonth()+1});done(n>0?`${n} cotisation(s) créée(s) pour ${MOIS[d.getMonth()]}`:`Les cotisations de ${MOIS[d.getMonth()]} existent déjà`)});
   });
 }
 async function relanceSheet(){
   const rows=await duesRows();const late=S.units.map(u=>({u,l:lateRows(rows,u.unit_number)})).filter(x=>x.l.length);
   openSheet(`<h2>Relances</h2>${late.map(x=>`<div class="li"><div class="d"><b>${esc(x.u.unit_number)}</b><small>${x.l.length} mois · ${money(x.l.reduce((a,r)=>a+ +r.remaining,0))}</small></div><button class="btn sm" data-rl="${esc(x.u.id)}">WhatsApp</button></div>`).join('')||`<div class="li">Aucun impayé 🎉</div>`}`,sh=>{
-    sh.querySelectorAll('[data-rl]').forEach(b=>b.onclick=()=>{const x=late.find(y=>y.u.id===b.dataset.rl);openWa(relanceText(x.u.unit_number,[...x.l]))})});
+    sh.querySelectorAll('[data-rl]').forEach(b=>b.onclick=()=>guarded(async()=>{const x=late.find(y=>y.u.id===b.dataset.rl);openWa(relanceText(x.u.unit_number,[...x.l]),await unitPhone(x.u.id))}))});
 }
 async function waSheet(){
   const [st,rows,cred,logs]=await Promise.all([
@@ -395,7 +416,7 @@ more(){
   document.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>guarded(()=>sendReceiptWa(b.dataset.wa)));
   $('#repdf').onclick=()=>guarded(annualReport);
   $('#waauto').onclick=()=>guarded(waSheet);
-  $('#gen').onclick=()=>guarded(async()=>{const d=new Date();const n=await rpc('generate_dues',{p_year:d.getFullYear(),p_month:d.getMonth()+1});flash(`${n} ${t('dues')}`,true)});
+  $('#cots').onclick=()=>guarded(cotSheet);
   document.querySelectorAll('[data-cxp]').forEach(b=>b.onclick=()=>guarded(async()=>{
     const why=prompt('Motif de l\'annulation du paiement (le reçu sera invalidé et la cotisation redeviendra due) :');if(!why)return;
     await rpc('cancel_payment',{p_payment_id:b.dataset.cxp,p_reason:why});flash(t('saved'),true)}));
@@ -456,9 +477,11 @@ function pdfRow(d,y,cols,bold){d.setFont(undefined,bold?'bold':'normal');d.setFo
 const lateRows=(rows,name)=>{const n=new Date(),cy=n.getFullYear(),cm=n.getMonth()+1;return rows.filter(r=>r.unit_number===name&&+r.remaining>0&&(+r.period_year<cy||(+r.period_year===cy&&+r.period_month<=cm)))}
 async function duesRows(){return load('dues',()=>q(sb.from('v_dues_detail').select('*').order('period_year',{ascending:false}).order('period_month',{ascending:false}).limit(400)))}
 function relanceText(name,late){const tot=late.reduce((a,r)=>a+ +r.remaining,0);
-  const mois=late.sort((a,b)=>a.period_year-b.period_year||a.period_month-b.period_month).map(r=>String(r.period_month).padStart(2,'0')+'/'+r.period_year).join(', ');
-  return `Bonjour ${name}, rappel de la copropriété : cotisation(s) impayée(s) pour ${mois}, soit ${pn(tot)} MAD au total. Merci de régulariser dès que possible. Cordialement, le syndic.`}
-function openWa(text){window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank')}
+  const ms=[...late].sort((a,b)=>a.period_year-b.period_year||a.period_month-b.period_month).map(r=>MOIS[r.period_month-1]+(+r.period_year!==new Date().getFullYear()?' '+r.period_year:''));
+  const lib=ms.length===1?'le mois de '+ms[0]:'les mois de '+ms.join(', ');
+  return `Bonjour ${name}, le syndic vous rappelle que la cotisation mensuelle pour ${lib} est à régler. Montant : ${Math.round(tot*100)/100} DH. Merci pour votre contribution au bon fonctionnement de l'immeuble.`}
+async function unitPhone(unitId){try{const c=(await q(sb.from('whatsapp_reminder_config').select('phone_number').eq('unit_id',unitId).limit(1)))[0];return (c?.phone_number||'').replace(/\D/g,'')}catch(e){return ''}}
+function openWa(text,phone){const u='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text);window.open(u,'_blank')}
 async function unitStatement(unitId){
   const u=S.units.find(x=>x.id===unitId);const rows=(await duesRows()).filter(r=>r.unit_number===u.unit_number).sort((a,b)=>a.period_year-b.period_year||a.period_month-b.period_month);
   const pays=await q(sb.from('payments').select('payment_date,amount,payment_method').eq('unit_id',unitId).is('cancelled_at',null).order('payment_date'));
