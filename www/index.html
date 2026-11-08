@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v16 – Gestion de copropriété</title>
+<title>Syndic v17 – Gestion de copropriété</title>
 <style>
 :root{--bg:#11151b;--card:#181e26;--tx:#f3f5f7;--mu:#a7b1bf;--pr:#d4f77d;--prd:#b8dc5f;--rd:#ff7a6b;--or:#f0b13b;--bd:#35404c;--ok:#d4f77d;--pa:#f0b13b;--pe:#ff7a6b;--on:#11151b;--olive:#52643d;--fd:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fm:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -73,13 +73,13 @@ const T={fr:{app:'Syndic',login:'Connexion',email:'E-mail',pwd:'Mot de passe',si
 cash:'Trésorerie réelle',pending:'Dépenses à payer',after:'Après dettes',arrears:'Impayés',collected:'Cotisations encaissées',expected:'Cotisations attendues',flows:'Flux mensuels (12 mois)',in:'Entrées',out:'Sorties',
 unit:'Appartement',amount:'Montant (MAD)',date:'Date',method:'Mode',cash_:'Espèces',transfer:'Virement',check:'Chèque',other:'Autre',save:'Enregistrer',paid:'Payé',partial:'Partiel',pend:'En attente',period:'Période',due:'Dû',remaining:'Reste',
 newpay:'Nouveau paiement',newexp:'Nouvelle dépense',desc:'Désignation',cat:'Catégorie',supplier:'Fournisseur',status:'Statut',cancel:'Annuler',reason:'Motif',receipts:'Reçus',genDues:'Générer les cotisations du mois',
-journal:'Journal de trésorerie',balance:'Solde',export:'Exporter CSV',print:'Imprimer',lang:'العربية',pdf:'Reçu PDF',wa:'WhatsApp',verify:'Vérification du reçu',valid:'Reçu valide',invalid:'Reçu invalide ou annulé',unknown:'Reçu inconnu',
+journal:'Journal de trésorerie',balance:'Solde',export:'Exporter PDF',print:'Imprimer',lang:'العربية',pdf:'Reçu PDF',wa:'WhatsApp',verify:'Vérification du reçu',valid:'Reçu valide',invalid:'Reçu invalide ou annulé',unknown:'Reçu inconnu',
 late:'en retard',none:'Aucune donnée',saved:'Enregistré',confirm:'Confirmer ?',paidexp:'Payée',pendexp:'À payer',payNow:'Payer',report:'Rapport annuel'},
 ar:{app:'السانديك',login:'تسجيل الدخول',email:'البريد',pwd:'كلمة المرور',signin:'دخول',logout:'خروج',dash:'الرئيسية',dues:'المساهمات',exp:'المصاريف',treas:'الخزينة',more:'المزيد',
 cash:'الخزينة الفعلية',pending:'مصاريف غير مؤداة',after:'بعد الديون',arrears:'المتأخرات',collected:'المساهمات المحصلة',expected:'المساهمات المنتظرة',flows:'التدفقات الشهرية',in:'المداخيل',out:'المصاريف',
 unit:'الشقة',amount:'المبلغ (درهم)',date:'التاريخ',method:'الطريقة',cash_:'نقداً',transfer:'تحويل',check:'شيك',other:'أخرى',save:'حفظ',paid:'مؤدى',partial:'جزئي',pend:'في الانتظار',period:'الفترة',due:'المستحق',remaining:'المتبقي',
 newpay:'دفعة جديدة',newexp:'مصروف جديد',desc:'البيان',cat:'الصنف',supplier:'المورد',status:'الحالة',cancel:'إلغاء',reason:'السبب',receipts:'الوصولات',genDues:'إنشاء مساهمات الشهر',
-journal:'سجل الخزينة',balance:'الرصيد',export:'تصدير CSV',print:'طباعة',lang:'Français',pdf:'وصل PDF',wa:'واتساب',verify:'التحقق من الوصل',valid:'وصل صحيح',invalid:'وصل غير صالح أو ملغى',unknown:'وصل غير معروف',
+journal:'سجل الخزينة',balance:'الرصيد',export:'تصدير PDF',print:'طباعة',lang:'Français',pdf:'وصل PDF',wa:'واتساب',verify:'التحقق من الوصل',valid:'وصل صحيح',invalid:'وصل غير صالح أو ملغى',unknown:'وصل غير معروف',
 late:'متأخر',none:'لا توجد بيانات',saved:'تم الحفظ',confirm:'تأكيد؟',paidexp:'مؤدى',pendexp:'غير مؤدى',payNow:'أداء',report:'التقرير السنوي'}};
 let lang=(()=>{try{return localStorage.getItem('lang')||'fr'}catch(e){return 'fr'}})();
 const t=k=>T[lang][k]||k;
@@ -212,7 +212,7 @@ async more(){
   const rc=await load('rc',()=>q(sb.from('receipts').select('id,payment_id,receipt_number,owner_name,amount,payment_date,status,verification_token,amount_in_words,period_label,payment_method,remaining_balance').order('created_at',{ascending:false}).limit(200)));
   S.receipts=rc;const pg=pageOf('more',rc,4);
   return `<div class="tile fill"><div class="ttl">${t('receipts')}</div>${pg.items.map(r=>`<div class="li"><div class="d"><b>${esc(r.receipt_number)}${r.status!=='valid'?' ✕':''}</b><small>${esc(r.owner_name)} · ${esc(r.payment_date)}</small></div><span class="am">${num(r.amount)}</span><button class="btn sm" data-pdf="${esc(r.id)}">PDF</button><button class="btn sm sec" data-wa="${esc(r.id)}">${t('wa')}</button>${r.status==='valid'?`<button class="btn sm dg ib" data-cxp="${esc(r.payment_id)}" aria-label="Annuler le paiement">${ico('x',15)}</button>`:''}</div>`).join('')||`<div class="li">${t('none')}</div>`}<div style="flex:1"></div>${pager('more',pg)}</div>
-  <div class="acts"><button class="btn" id="repdf">${t('report')} (PDF)</button><button class="btn sec" id="rep">CSV</button></div>
+  <div class="acts"><button class="btn" id="repdf">${t('report')} (PDF)</button></div>
   <div class="acts"><button class="btn sec" id="waauto">Relances WhatsApp automatiques</button></div>
   <div class="acts"><button class="btn sec" id="gen">${t('genDues')}</button></div>`;
 }};
@@ -226,11 +226,23 @@ function paySheet(unitId){
   let rid=uuid();
   openSheet(`<h2>${t('newpay')}</h2>
   <label>${t('unit')}</label><select id="pu">${unitOptions(unitId)}</select>
-  <label>${t('amount')}</label><input id="pa" type="number" inputmode="decimal" min="0.01" step="0.01" autofocus>
+  <label class="chk" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="padv" style="width:auto"> Paiement par anticipation (mois à venir)</label>
+  <div id="advbox" style="display:none"><label>Nombre de mois à payer d'avance</label><select id="pmo">${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>`<option value="${n}">${n}</option>`).join('')}</select><small id="advinfo" style="color:var(--mu)"></small></div>
+  <div id="amtbox"><label>${t('amount')}</label><input id="pa" type="number" inputmode="decimal" min="0.01" step="0.01" autofocus></div>
   <div class="row"><div><label>${t('date')}</label><input id="pd" type="date" value="${today()}"></div>
   <div><label>${t('method')}</label><select id="pm"><option value="cash">${t('cash_')}</option><option value="transfer">${t('transfer')}</option><option value="check">${t('check')}</option><option value="other">${t('other')}</option></select></div></div>
   <div class="acts" style="margin-top:12px"><button class="btn" id="paysave">${t('save')}</button></div>`,sh=>{
+    const adv=()=>sh.querySelector('#padv').checked;
+    const upd=()=>{const on=adv();sh.querySelector('#advbox').style.display=on?'block':'none';sh.querySelector('#amtbox').style.display=on?'none':'block';
+      const u=S.units.find(x=>x.id===sh.querySelector('#pu').value)||{};const fee=+u.monthly_fee||100,n=+sh.querySelector('#pmo').value;
+      const d=new Date();const f=new Date(d.getFullYear(),d.getMonth()+1,1),l=new Date(d.getFullYear(),d.getMonth()+n,1);
+      const lb=x=>MOIS[x.getMonth()]+' '+x.getFullYear();
+      sh.querySelector('#advinfo').textContent=`${lb(f)}${n>1?' → '+lb(l):''} · ≈ ${money(fee*n)}`};
+    ['#padv','#pmo','#pu'].forEach(i=>sh.querySelector(i).onchange=upd);upd();
     sh.querySelector('#paysave').onclick=()=>guarded(async()=>{
+      if(adv()){const r=await rpc('record_advance_payment',{p_unit_id:sh.querySelector('#pu').value,p_months:+sh.querySelector('#pmo').value,p_payment_date:sh.querySelector('#pd').value,p_method:sh.querySelector('#pm').value,p_request_id:rid});
+        rid=uuid();flash(r.duplicate?'Déjà enregistré':`${t('saved')} – ${r.receipt_number||''} (${(r.months||[]).join(', ')})`,true);
+        if(r.receipt_id&&!r.duplicate){await makePdf(r.receipt_id)}return}
       const amount=parseFloat(sh.querySelector('#pa').value);if(!(amount>0))throw new Error('Montant invalide');
       const r=await rpc('record_payment',{p_unit_id:sh.querySelector('#pu').value,p_amount:amount,p_payment_date:sh.querySelector('#pd').value,p_method:sh.querySelector('#pm').value,p_request_id:rid});
       rid=uuid();flash(r.duplicate?'Déjà enregistré':`${t('saved')} – ${r.receipt_number||''}`,true);
@@ -377,29 +389,32 @@ exp(){
   document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>guarded(async()=>{
     await rpc('pay_expense',{p_expense_id:b.dataset.pay,p_date:today(),p_method:'cash'});flash(t('saved'),true)}));
 },
-treas(){$('#csv').onclick=()=>csv('journal.csv',[['date','description','type','amount','solde'],...S.journal.map(r=>[r.movement_date,r.description,r.movement_type,r.amount,r.running_balance])])},
+treas(){$('#csv').onclick=()=>guarded(()=>tablePdf('JOURNAL DE TRÉSORERIE','journal-tresorerie.pdf',[['Date',15,'left'],['Description',42,'left'],['Montant',150,'right'],['Solde',195,'right']],S.journal.map(r=>[r.movement_date,r.description,pn(r.amount),pn(r.running_balance)])))},
 more(){
   document.querySelectorAll('[data-pdf]').forEach(b=>b.onclick=()=>guarded(()=>makePdf(b.dataset.pdf)));
-  document.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>{const r=S.receipts.find(x=>x.id===b.dataset.wa);
-    const txt=`Reçu ${r.receipt_number} – ${r.owner_name} – ${money(r.amount)} (${r.payment_date})\n${verifyUrl(r.verification_token)}`;
-    window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')});
+  document.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>guarded(()=>sendReceiptWa(b.dataset.wa)));
   $('#repdf').onclick=()=>guarded(annualReport);
   $('#waauto').onclick=()=>guarded(waSheet);
   $('#gen').onclick=()=>guarded(async()=>{const d=new Date();const n=await rpc('generate_dues',{p_year:d.getFullYear(),p_month:d.getMonth()+1});flash(`${n} ${t('dues')}`,true)});
   document.querySelectorAll('[data-cxp]').forEach(b=>b.onclick=()=>guarded(async()=>{
     const why=prompt('Motif de l\'annulation du paiement (le reçu sera invalidé et la cotisation redeviendra due) :');if(!why)return;
     await rpc('cancel_payment',{p_payment_id:b.dataset.cxp,p_reason:why});flash(t('saved'),true)}));
-  $('#rep').onclick=()=>guarded(async()=>{const d=await q(sb.from('v_annual_financial_summary').select('*'));
-    if(!d.length)throw new Error(t('none'));csv('rapport_annuel.csv',[Object.keys(d[0]),...d.map(r=>Object.values(r))])});
 }};
-function csv(name,rows){
-  const body='﻿'+rows.map(r=>r.map(c=>{let s=String(c??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}).join(';')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+async function tablePdf(title,name,cols,rows){
+  if(!rows.length)throw new Error(t('none'));
+  const bld=(await q(sb.from('buildings').select('name').limit(1)))[0];
+  const {jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4'});
+  const head=()=>{pdfHead(d,title,`${bld?.name||''} - établi le ${today().split('-').reverse().join('/')}`);pdfRow(d,36,cols.map(([h,x,a])=>[x,h,a]),true);return 43};
+  let y=head();
+  rows.forEach(r=>{const w=cols[1][1]===42?85:0;const txt=d.splitTextToSize(String(r[1]??''),w||80);const h=Math.max(6,txt.length*5);
+    if(y+h>285){d.addPage();y=head()}
+    cols.forEach(([h2,x,a],k)=>{const v=k===1&&w?txt:String(r[k]??'');d.setFont(undefined,'normal');d.setFontSize(9);d.text(v,x,y,{align:a})});y+=h});
+  await deliverPdf(d,name);
 }
 const PUBLIC_URL='https://dreamy-cobbler-73fcd2.netlify.app/';
 const verifyUrl=tok=>{const web=/^https?:$/.test(location.protocol)&&!/localhost|appassets/.test(location.hostname);
   return (web?location.origin+location.pathname:PUBLIC_URL)+'#/verify/'+encodeURIComponent(tok)};
-async function makePdf(receiptId){
+async function buildReceipt(receiptId){
   const r=(await q(sb.from('receipts').select('*').eq('id',receiptId).limit(1)))[0];
   if(!r)throw new Error('Reçu introuvable');
   const bld=(await q(sb.from('buildings').select('name').limit(1)))[0];
@@ -414,7 +429,19 @@ async function makePdf(receiptId){
    .forEach(([k,v])=>{d.setFont(undefined,'bold');d.text(k+' :',15,y);d.setFont(undefined,'normal');d.text(d.splitTextToSize(String(v),90),50,y);y+=(String(v).length>45?14:9)});
   if(img)d.addImage(img,'PNG',100,y-2,36,36);
   d.setFontSize(8);d.text('Scannez pour vérifier l\'authenticité',118,y+40,{align:'center'});
-  await deliverPdf(d,`recu-${r.receipt_number}.pdf`);
+  return {d,r,name:`recu-${r.receipt_number}.pdf`};
+}
+async function makePdf(receiptId){const x=await buildReceipt(receiptId);await deliverPdf(x.d,x.name)}
+async function sendReceiptWa(receiptId){
+  const {d,r,name}=await buildReceipt(receiptId);
+  let phone='';try{const c=(await q(sb.from('whatsapp_reminder_config').select('phone_number').eq('unit_id',r.unit_id).limit(1)))[0];phone=(c?.phone_number||'').replace(/\D/g,'')}catch(e){}
+  const txt=`Reçu ${r.receipt_number} – ${r.owner_name} – ${money(r.amount)} (${r.payment_date})\nVérification : ${verifyUrl(r.verification_token)}`;
+  const blob=d.output('blob');
+  if(window.Bridge&&Bridge.shareWhatsApp){const rd=new FileReader();rd.onload=()=>Bridge.shareWhatsApp(name,rd.result.split(',')[1],'application/pdf',phone,txt);rd.readAsDataURL(blob);return}
+  const file=new File([blob],name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:txt,title:name});return}catch(e){if(e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(txt),'_blank');
 }
 async function deliverPdf(d,name){
   const blob=d.output('blob');const file=new File([blob],name,{type:'application/pdf'});
