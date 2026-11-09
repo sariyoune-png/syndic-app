@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Syndic v19 – Gestion de copropriété</title>
+<title>Syndic v20 – Gestion de copropriété</title>
 <style>
 :root{--bg:#11151b;--card:#181e26;--tx:#f3f5f7;--mu:#a7b1bf;--pr:#d4f77d;--prd:#b8dc5f;--rd:#ff7a6b;--or:#f0b13b;--bd:#35404c;--ok:#d4f77d;--pa:#f0b13b;--pe:#ff7a6b;--on:#11151b;--olive:#52643d;--fd:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fm:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -366,6 +366,17 @@ async function relanceSheet(){
   openSheet(`<h2>Relances</h2>${late.map(x=>`<div class="li"><div class="d"><b>${esc(x.u.unit_number)}</b><small>${x.l.length} mois · ${money(x.l.reduce((a,r)=>a+ +r.remaining,0))}</small></div><button class="btn sm" data-rl="${esc(x.u.id)}">WhatsApp</button></div>`).join('')||`<div class="li">Aucun impayé 🎉</div>`}`,sh=>{
     sh.querySelectorAll('[data-rl]').forEach(b=>b.onclick=()=>guarded(async()=>{const x=late.find(y=>y.u.id===b.dataset.rl);openWa(relanceText(x.u.unit_number,[...x.l]),await unitPhone(x.u.id))}))});
 }
+async function waCall(body){
+  const {data,error}=await sb.functions.invoke('wa-reminders',{body});
+  let b=data;if(error&&error.context&&error.context.json){try{b=await error.context.json()}catch(e){}}
+  return {b,error}}
+function metaMsg(raw){
+  let m=String(raw||'Échec de l’envoi'),code=null;
+  try{const j=JSON.parse(m);code=j.code;m=(j.message||'')+(j.code?' (code '+j.code+')':'')+(j.error_data&&j.error_data.details?' : '+j.error_data.details:'')}catch(e){}
+  if(code===131030||/131030/.test(m))return "Ce numéro n’est pas dans la liste des destinataires du numéro de test Meta. Dans Meta : Configuration de l’API ▸ « À » ▸ Gérer la liste de numéros ▸ ajoutez-le et confirmez le code reçu sur son WhatsApp. (code 131030)";
+  if(code===132001||/132001/.test(m))return "Le modèle de message n’est pas encore approuvé ou son nom/langue est incorrect. (code 132001)";
+  if(code===190||/190/.test(m)&&/token|OAuth/i.test(m))return "Jeton Meta invalide ou expiré : enregistrez un nouveau jeton. (code 190)";
+  return m.slice(0,350)}
 async function waSheet(){
   const [st,rows,cred,logs]=await Promise.all([
     q(sb.from('whatsapp_settings').select('*').eq('id',1).single()),
@@ -373,21 +384,21 @@ async function waSheet(){
     rpc('wa_credentials_status'),
     q(sb.from('whatsapp_reminder_logs').select('resident_name,billing_month,billing_year,amount_due,status,delivery_status,sent_at,reminder_date,error').order('created_at',{ascending:false}).limit(8))]);
   const ready=cred.token&&cred.phone_id;
-  const badge=r=>!st.enabled||!r.enabled?['Désactivé','var(--mu)']:r.unreachable?['Injoignable · blocage possible','var(--or)']:r.last_failed_today?['Échec','var(--or)']:+r.outstanding>0?['Impayé · relances actives','var(--rd)']:['Payé · relances arrêtées','var(--ok)'];
+  const badge=r=>!st.enabled||!r.enabled?['Désactivé','var(--mu)']:r.unreachable?['Injoignable · à vérifier','var(--or)']:r.last_failed_today?['Échec','var(--or)']:+r.outstanding>0?['Impayé · relances actives','var(--rd)']:['Payé · relances arrêtées','var(--ok)'];
   const MO=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
   const next=(r)=>st.enabled&&r.enabled&&+r.outstanding>0?(new Date().getHours()<st.daily_reminder_hour?'aujourd’hui':'demain')+' '+String(st.daily_reminder_hour).padStart(2,'0')+'h':'—';
   openSheet(`<h2>Relances WhatsApp automatiques</h2>
   <label class="row" style="margin:6px 0"><span style="flex:1;font-weight:600">Automatisation globale</span><input type="checkbox" id="wa_on" style="width:auto" ${st.enabled?'checked':''}></label>
   <div class="row" style="margin:4px 0"><span style="flex:none;padding:3px 10px;border-radius:99px;font:700 11px var(--fm);background:${st.mode==='production'?'var(--pr)':'var(--or)'};color:var(--on)">${st.mode==='production'?'MODE PRODUCTION':'MODE TEST'}</span><button class="btn sm sec" id="wa_mode" style="flex:none">${st.mode==='production'?'Repasser en TEST':'Passer en PRODUCTION'}</button></div>
   ${st.mode!=='production'?'<small style="color:var(--mu)">En mode TEST, aucun rappel automatique n’est envoyé : seul le bouton « Envoyer un test » fonctionne.</small><br>':''}
-  ${rows.some(r=>r.enabled&&r.unreachable)?`<div class="msg err" style="margin:6px 0">⚠ Injoignable : ${rows.filter(r=>r.enabled&&r.unreachable).map(r=>esc(r.unit_number)).join(', ')}. Le numéro est peut-être bloqué ou invalide.</div>`:''}
+  ${rows.some(r=>r.enabled&&r.unreachable)?`<div class="msg err" style="margin:6px 0">⚠ Injoignable : ${rows.filter(r=>r.enabled&&r.unreachable).map(r=>esc(r.unit_number)).join(', ')}. Voir le détail sous chaque appartement.</div>`:''}
   <small style="color:var(--${ready?'ok':'or'})">${ready?'API WhatsApp configurée':'API non configurée : renseignez les identifiants ci-dessous'}</small>
   ${rows.map(r=>{const b=badge(r);return `<div class="tile" style="margin-top:8px;border-color:${b[1]}">
     <div class="row"><b style="flex:1">${esc(r.unit_number)}</b><span style="color:${b[1]};font:700 11px var(--fm)">${b[0]}</span></div>
     <div class="row" style="margin-top:6px"><input data-ph="${r.unit_id}" value="${esc(r.phone_number||'')}" placeholder="+212…" inputmode="tel"><label style="margin:0;flex:none"><input type="checkbox" data-en="${r.unit_id}" style="width:auto" ${r.enabled?'checked':''}> actif</label></div>
-    ${r.unreachable&&r.enabled?`<small style="color:var(--or);display:block;margin:4px 0">⚠ ${esc(r.unreachable_reason)}. Prévenez ${esc(r.unit_number)} ou vérifiez son numéro.</small>`:''}
+    ${r.unreachable&&r.enabled?`<small style="color:var(--or);display:block;margin:4px 0">⚠ ${esc(r.unreachable_reason)} </small><div class="acts" style="margin:4px 0"><button class="btn sm sec" data-tst="${r.unit_id}">Tester ce numéro</button></div>`:''}
     <small style="color:var(--mu)">Dû ${money(r.outstanding)} · envoyés ${r.sent_count} · dernier ${r.last_sent_at?new Date(r.last_sent_at).toLocaleDateString('fr-FR'):'—'} · prochain ${next(r)}</small></div>`}).join('')}
-  <div class="acts" style="margin-top:8px"><button class="btn" id="wa_save">Enregistrer</button></div>
+  <div class="acts" style="margin-top:8px"><button class="btn" id="wa_save">Enregistrer</button><button class="btn sec" id="wa_retry">Réessayer maintenant</button></div>
   <details style="margin-top:10px"><summary style="color:var(--mu)">Configuration API WhatsApp (Meta)</summary>
     <label>Phone Number ID</label><input id="wa_pid" placeholder="${cred.phone_id?'déjà enregistré (laisser vide pour conserver)':''}" autocomplete="off">
     <label>WhatsApp Business Account ID</label><input id="wa_wid" placeholder="${cred.waba_id?'déjà enregistré':''}" autocomplete="off">
@@ -399,7 +410,7 @@ async function waSheet(){
     <div class="acts" style="margin-top:8px"><button class="btn sec" id="wa_cred">Enregistrer l’API</button><button class="btn sec" id="wa_test">Envoyer un test</button></div>
   </details>
   <div class="ttl" style="margin-top:12px">Historique récent</div>
-  ${logs.map(l=>`<div class="li"><div class="d"><b>${esc(l.resident_name)} · ${MO[l.billing_month-1]} ${l.billing_year}</b><small>${l.reminder_date} · ${money(l.amount_due)}${l.error?' · '+esc(String(l.error).slice(0,60)):''}</small></div><span style="font:700 10px var(--fm);color:var(--${l.status==='sent'?'ok':l.status==='failed'?'or':'mu'})">${l.status==='sent'&&l.delivery_status&&l.delivery_status!=='sent'&&l.delivery_status!=='accepted'?l.delivery_status:l.status}</span></div>`).join('')||'<div class="li">Aucun envoi pour le moment</div>'}`,sh=>{
+  ${logs.map(l=>`<div class="li"><div class="d"><b>${esc(l.resident_name)} · ${MO[l.billing_month-1]} ${l.billing_year}</b><small>${l.reminder_date} · ${money(l.amount_due)}${l.error?' · '+esc(/131030/.test(l.error)?'numéro absent de la liste Meta (131030)':/132001/.test(l.error)?'modèle non approuvé (132001)':String(l.error).slice(0,60)):''}</small></div><span style="font:700 10px var(--fm);color:var(--${l.status==='sent'?'ok':l.status==='failed'?'or':'mu'})">${l.status==='sent'&&l.delivery_status&&l.delivery_status!=='sent'&&l.delivery_status!=='accepted'?l.delivery_status:l.status}</span></div>`).join('')||'<div class="li">Aucun envoi pour le moment</div>'}`,sh=>{
     const val=id=>sh.querySelector('#'+id).value.trim();
     sh.querySelector('#wa_save').onclick=()=>guarded(async()=>{
       await q(sb.from('whatsapp_settings').update({enabled:sh.querySelector('#wa_on').checked,daily_reminder_hour:+val('wa_h'),template_name:val('wa_tpl'),updated_at:new Date().toISOString()}).eq('id',1));
@@ -415,14 +426,20 @@ async function waSheet(){
       flash(t('saved'),true)});
     sh.querySelector('#wa_cred').onclick=()=>guarded(async()=>{
       await rpc('wa_set_credentials',{p_phone_id:val('wa_pid'),p_waba_id:val('wa_wid'),p_token:val('wa_tok')});await rpc('wa_set_app_secret',{p_secret:val('wa_sec')});flash(t('saved'),true)});
-    sh.querySelector('#wa_test').onclick=()=>guarded(async()=>{
-      const ph=prompt('Numéro WhatsApp qui recevra le message de test (ex. 212612345678) :');if(!ph)return;
-      const {data,error}=await sb.functions.invoke('wa-reminders',{body:{action:'test',phone:ph}});
-      let b=data;if(error&&error.context&&error.context.json){try{b=await error.context.json()}catch(e){}}
-      if(error||!b||b.ok===false){let m=(b&&b.error)||(error&&error.message)||'Échec de l’envoi';
-        try{const j=JSON.parse(m);m=(j.message||'')+(j.code?' (code '+j.code+')':'')+(j.error_data&&j.error_data.details?' : '+j.error_data.details:'')}catch(e){}
-        throw new Error(String(m).slice(0,350))}
-      toast('Message de test envoyé',true)});
+    const doTest=async ph=>{const {b,error}=await waCall({action:'test',phone:ph});
+      if(error||!b||b.ok===false)throw new Error(metaMsg((b&&b.error)||(error&&error.message)));
+      toast('Message de test envoyé à '+ph,true)};
+    sh.querySelector('#wa_test').onclick=()=>guarded(async()=>{const ph=prompt('Numéro WhatsApp qui recevra le message de test (ex. 212612345678) :');if(!ph)return;await doTest(ph)});
+    sh.querySelectorAll('[data-tst]').forEach(b=>b.onclick=()=>guarded(async()=>{const ph=sh.querySelector(`[data-ph="${b.dataset.tst}"]`).value.trim();if(!ph)throw new Error('Numéro manquant');await doTest(ph)}));
+    sh.querySelector('#wa_retry').onclick=()=>guarded(async()=>{
+      if(!st.enabled||st.mode!=='production')throw new Error('Activez l’automatisation globale et le mode PRODUCTION (puis Enregistrer) avant de réessayer.');
+      const {b,error}=await waCall({action:'run',reset_failed:true});
+      if(error||!b||b.ok===false)throw new Error(metaMsg((b&&b.error)||(error&&error.message)));
+      if(b.skipped)throw new Error('Rien envoyé : '+b.skipped);
+      const pr=b.processed||[],ok=pr.filter(x=>x.ok).length,ko=pr.filter(x=>!x.ok);
+      if(!pr.length){toast('Aucun rappel à envoyer (aucun impayé).',true);return}
+      if(ko.length)throw new Error(`${ok} envoyé(s), ${ko.length} en échec : ${metaMsg(ko[0].error)}`);
+      flash(`${ok} rappel(s) envoyé(s)`,true)});
   });
 }
 function expSheet(){
